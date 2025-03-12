@@ -8,7 +8,12 @@ fmt:
 	go fmt ./...
 
 fmt-check:
-	go fmt -n ./...
+	@echo "Checking Go code formatting..."
+	@if gofmt -l . | tee /dev/stderr | grep .; then \
+		echo "Go files are not formatted!"; \
+		exit 1; \
+	fi
+	@echo "Formatting passes!"
 
 run:
 	DB_TYPE=sqlite DATABASE_URL=local.db go run main.go
