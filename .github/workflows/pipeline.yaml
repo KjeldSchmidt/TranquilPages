@@ -60,4 +60,4 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }} # See https://github.com/Azure/login?tab=readme-ov-file#login-with-a-service-principal-secret
 
       - name: Terraform Apply
-        run: make tf-apply-auto dev
+        run: make tf-apply-auto env=dev
