@@ -6,6 +6,7 @@ test:
 
 fmt:
 	go fmt ./...
+	cd infra && terraform fmt -recursive .
 
 fmt-check:
 	@echo "Checking Go code formatting..."
@@ -13,7 +14,8 @@ fmt-check:
 		echo "Go files are not formatted!"; \
 		exit 1; \
 	fi
-	@echo "Formatting passes!"
+	@echo "Checking Terraform formatting..."
+	cd infra && terraform fmt -recursive -check .
 
 run:
 	DB_TYPE=sqlite DATABASE_URL=local.db go run main.go
@@ -21,7 +23,11 @@ run:
 vet:
 	go vet ./...
 
-quality-gates: fmt vet test build
+tf-validate:
+	cd infra/base && terraform validate
+	cd infra/env/dev && terraform validate
+
+quality-gates: fmt vet test build tf-validate
 	echo "✅✅✅"
 
 .PHONY: build
