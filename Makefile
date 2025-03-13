@@ -21,4 +21,7 @@ run:
 vet:
 	go vet ./...
 
+quality-gates: fmt vet test build
+	echo "✅✅✅"
+
 .PHONY: build

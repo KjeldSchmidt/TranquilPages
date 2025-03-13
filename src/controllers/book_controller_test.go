@@ -4,10 +4,13 @@ import (
 	"betterreads/src/database"
 	"betterreads/src/models"
 	"betterreads/src/services"
+	"betterreads/src/test_utils"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,12 +26,37 @@ func getTestDependencies() *gin.Engine {
 	return router
 }
 
+func makeRandomBook() *models.Book {
+	author := "Author " + test_utils.RandomString(12)
+	title := "Title " + test_utils.RandomString(20)
+	comment := "Comment " + test_utils.RandomString(20)
+	rating := rand.Intn(6)
+	book := models.Book{Author: author, Title: title, Comment: comment, Rating: rating}
+	return &book
+}
+
+func writeBookViaApi(router *gin.Engine, book *models.Book) *models.Book {
+	w := httptest.NewRecorder()
+	bookJson, _ := json.Marshal(book)
+	req, _ := http.NewRequest("POST", "/books", bytes.NewReader(bookJson))
+	req.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(w, req)
+
+	var resultBook *models.Book
+	_ = json.Unmarshal(w.Body.Bytes(), &resultBook)
+	return resultBook
+}
+
 func TestBookController_GivenEmptyDatabase_ReturnsNoBooks(t *testing.T) {
+	// Given
 	router := getTestDependencies()
+
+	// When
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/books", nil)
 	router.ServeHTTP(w, req)
 
+	// Then
 	var books []models.Book
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -39,17 +67,13 @@ func TestBookController_GivenEmptyDatabase_ReturnsNoBooks(t *testing.T) {
 func TestBookController_GivenBookIsCreated_ReturnsThatBook(t *testing.T) {
 	// given
 	router := getTestDependencies()
-	book := models.Book{Title: "The Go Programming Language", Author: "Rob Pike", Comment: "sus", Rating: 2}
+	book := makeRandomBook()
 
-	w := httptest.NewRecorder()
-	bookJson, _ := json.Marshal(book)
-	req, _ := http.NewRequest("POST", "/books", bytes.NewReader(bookJson))
-	req.Header.Set("Content-Type", "application/json")
-	router.ServeHTTP(w, req)
+	writeBookViaApi(router, book)
 
 	// when
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/books", nil)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/books", nil)
 	router.ServeHTTP(w, req)
 
 	// then
@@ -58,8 +82,78 @@ func TestBookController_GivenBookIsCreated_ReturnsThatBook(t *testing.T) {
 
 	_ = json.Unmarshal(w.Body.Bytes(), &books)
 	assert.Equal(t, 1, len(books))
-	assert.Equal(t, "The Go Programming Language", books[0].Title)
-	assert.Equal(t, "Rob Pike", books[0].Author)
-	assert.Equal(t, "sus", books[0].Comment)
-	assert.Equal(t, 2, books[0].Rating)
+	assert.True(t, models.CompareBooks(book, &books[0]))
+}
+
+func TestBookController_GivenBookIsCreated_CanFetchThatBookById(t *testing.T) {
+	// given
+	router := getTestDependencies()
+	transientBook := makeRandomBook()
+	expectedBook := writeBookViaApi(router, transientBook)
+
+	// when
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/books/%d", expectedBook.ID), nil)
+	router.ServeHTTP(w, req)
+
+	// then
+	var actualBook *models.Book
+	assert.Equal(t, w.Code, http.StatusOK)
+
+	_ = json.Unmarshal(w.Body.Bytes(), &actualBook)
+	assert.True(t, models.CompareBooks(expectedBook, actualBook))
+}
+
+func TestBookController_GivenManyBooksAreCreated_CanFetchSpecificBookById(t *testing.T) {
+	// given
+	router := getTestDependencies()
+	bookCount := 5
+
+	var expectedBook *models.Book
+	for i := 0; i < bookCount; i++ {
+		transientBook := makeRandomBook()
+		expectedBook = writeBookViaApi(router, transientBook)
+	}
+
+	// when
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/books/%d", expectedBook.ID), nil)
+	router.ServeHTTP(w, req)
+
+	// then
+	var actualBook *models.Book
+	assert.Equal(t, w.Code, http.StatusOK)
+
+	_ = json.Unmarshal(w.Body.Bytes(), &actualBook)
+	assert.True(t, models.CompareBooks(expectedBook, actualBook))
+}
+
+func TestBookController_GivenManyBooksAreCreated_ReturnsAllBooks(t *testing.T) {
+	// given
+	router := getTestDependencies()
+	bookCount := 5
+
+	expectedBooks := make(map[uint]*models.Book)
+	for i := 0; i < bookCount; i++ {
+		transientBook := makeRandomBook()
+		book := writeBookViaApi(router, transientBook)
+		expectedBooks[book.ID] = book
+	}
+
+	// when
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/books", nil)
+	router.ServeHTTP(w, req)
+
+	// then
+	var actualBooks []models.Book
+	assert.Equal(t, w.Code, http.StatusOK)
+	_ = json.Unmarshal(w.Body.Bytes(), &actualBooks)
+
+	for _, actualBook := range actualBooks {
+		expectedBook, _ := expectedBooks[actualBook.ID]
+
+		assert.True(t, models.CompareBooks(expectedBook, &actualBook))
+	}
+	assert.Equal(t, len(expectedBooks), len(actualBooks))
 }

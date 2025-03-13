@@ -1,8 +1,11 @@
 package controllers
 
 import (
+	appErrors "betterreads/src/errors"
 	"betterreads/src/models"
 	"betterreads/src/services"
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -18,6 +21,7 @@ func NewBookController(bookService *services.BookService) *BookController {
 func (bc *BookController) SetupBookRoutes(router *gin.Engine) {
 	router.POST("/books", bc.CreateBook)
 	router.GET("/books", bc.ListBooks)
+	router.GET("/books/:id", bc.GetBook)
 }
 
 func (bc *BookController) CreateBook(c *gin.Context) {
@@ -43,4 +47,16 @@ func (bc *BookController) ListBooks(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, books)
+}
+
+func (bc *BookController) GetBook(c *gin.Context) {
+	var book, err = bc.bookService.GetBookById(c.Param("id"))
+	switch {
+	case errors.Is(err, appErrors.ErrNotFound):
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Book with id %s not found", c.Param("id"))})
+	case errors.Is(err, appErrors.ErrDatabase):
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	case err == nil:
+		c.JSON(http.StatusOK, book)
+	}
 }

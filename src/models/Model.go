@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"gorm.io/gorm"
+)
 
 type Book struct {
 	gorm.Model
@@ -8,4 +12,9 @@ type Book struct {
 	Author  string `json:"author"`
 	Comment string `json:"comment"`
 	Rating  int    `json:"rating"`
+}
+
+func CompareBooks(expected, actual *Book) bool {
+	ignoreGORMFields := cmpopts.IgnoreFields(Book{}, "ID", "CreatedAt", "UpdatedAt", "DeletedAt")
+	return cmp.Equal(expected, actual, ignoreGORMFields)
 }
