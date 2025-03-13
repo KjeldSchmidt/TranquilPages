@@ -15,6 +15,12 @@ resource "azurerm_role_assignment" "dev" {
   scope                = azurerm_resource_group.dev.id
 }
 
+resource "azurerm_role_assignment" "tfstate" {
+  principal_id         = azuread_service_principal.this.object_id
+  role_definition_name = "Contributor"
+  scope                = "/subscriptions/61c1fbf4-07d4-48c7-9d95-81aff1db63a8/resourceGroups/tfstate/providers/Microsoft.Storage/storageAccounts/tfstatekjeldschmidt"
+}
+
 resource "time_rotating" "password_rotation" {
   rotation_days = 30
 }
