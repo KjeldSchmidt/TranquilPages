@@ -24,8 +24,11 @@ vet:
 	go vet ./...
 
 tf-validate:
-	cd infra/base && terraform validate
-	cd infra/env/dev && terraform validate
+	cd infra/base && terraform init && terraform validate
+	cd infra/env/dev && terraform init && terraform validate
+
+tf-apply-auto:
+	cd "infra/env/${env}" && terraform init && terraform apply -auto-approve
 
 quality-gates: fmt vet test build tf-validate
 	echo "✅✅✅"
