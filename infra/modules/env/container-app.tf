@@ -30,6 +30,6 @@ resource "azurerm_container_app" "this" {
   secret {
     name                = azurerm_key_vault_secret.database_connection_string.name
     identity            = "System"
-    key_vault_secret_id = azurerm_key_vault_secret.database_connection_string.key_vault_id
+    key_vault_secret_id = azurerm_key_vault_secret.database_connection_string.id
   }
 }
