@@ -8,18 +8,23 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func getTestDependencies() *gin.Engine {
 	router := gin.Default()
 
-	db := database.GetTestDatabase()
+	db, err := database.GetTestDatabase()
+	if err != nil {
+		panic(err)
+	}
 	bookService := services.NewBookService(db)
 	bookController := NewBookController(bookService)
 	bookController.SetupBookRoutes(router)
@@ -93,7 +98,7 @@ func TestBookController_GivenBookIsCreated_CanFetchThatBookById(t *testing.T) {
 
 	// when
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/books/%d", expectedBook.ID), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/books/%s", expectedBook.ID.Hex()), nil)
 	router.ServeHTTP(w, req)
 
 	// then
@@ -117,7 +122,7 @@ func TestBookController_GivenManyBooksAreCreated_CanFetchSpecificBookById(t *tes
 
 	// when
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/books/%d", expectedBook.ID), nil)
+	req, _ := http.NewRequest("GET", fmt.Sprintf("/books/%s", expectedBook.ID.Hex()), nil)
 	router.ServeHTTP(w, req)
 
 	// then
@@ -133,7 +138,7 @@ func TestBookController_GivenManyBooksAreCreated_ReturnsAllBooks(t *testing.T) {
 	router := getTestDependencies()
 	bookCount := 5
 
-	expectedBooks := make(map[uint]*models.Book)
+	expectedBooks := make(map[primitive.ObjectID]*models.Book)
 	for i := 0; i < bookCount; i++ {
 		transientBook := makeRandomBook()
 		book := writeBookViaApi(router, transientBook)
@@ -152,7 +157,6 @@ func TestBookController_GivenManyBooksAreCreated_ReturnsAllBooks(t *testing.T) {
 
 	for _, actualBook := range actualBooks {
 		expectedBook, _ := expectedBooks[actualBook.ID]
-
 		assert.True(t, models.CompareBooks(expectedBook, &actualBook))
 	}
 	assert.Equal(t, len(expectedBooks), len(actualBooks))

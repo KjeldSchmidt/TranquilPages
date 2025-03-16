@@ -1,64 +1,90 @@
 package database
 
 import (
-	"betterreads/src/models"
-	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	"context"
+	"log"
 	"os"
+	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func migrate(db *gorm.DB) error {
-	err := db.AutoMigrate(&models.Book{})
-	if err != nil {
-		return err
-	}
-	return nil
-}
+var client *mongo.Client
+var db *mongo.Database
 
-func GetDbHandler() (*gorm.DB, error) {
-	connectionString, ok := os.LookupEnv("DATABASE_URL")
+func GetDbHandler() (*mongo.Database, error) {
+	if db != nil {
+		return db, nil
+	}
+
+	connectionString, ok := os.LookupEnv("DB_URL")
 	if !ok {
-		panic("Environment variable DATABASE_URL is not set, Must be a filename for sqlite or a connection string for postgres")
-	}
-	dbType, ok := os.LookupEnv("DB_TYPE")
-	if !ok {
-		panic("Environment variable DB_TYPE is not set, Must be 'sqlite' or 'postgres'")
+		panic("Environment variable DB_URL is not set")
 	}
 
-	var dialector gorm.Dialector
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	switch {
-	case dbType == "cosmos":
-		dialector = postgres.Open(connectionString)
-	case dbType == "sqlite":
-		dialector = sqlite.Open(connectionString)
-	default:
-		panic("Unsupported database type")
-	}
-
-	dbHandler, err := gorm.Open(dialector, &gorm.Config{})
-	if err != nil {
-		panic("failed to connect to database")
-	}
-
-	err = migrate(dbHandler)
+	clientOptions := options.Client().ApplyURI(connectionString)
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		return nil, err
 	}
 
-	return dbHandler, nil
+	// Ping the database to verify connection
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	db = client.Database("betterreads")
+	return db, nil
 }
 
-func GetTestDatabase() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+func GetTestDatabase() (*mongo.Database, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		panic("Couldn't create in-memory sqlite database for testing")
+		return nil, err
 	}
 
-	err = db.AutoMigrate(&models.Book{})
+	// Ping the database to verify connection
+	err = client.Ping(ctx, nil)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return db
+
+	// Get the test database
+	testDB := client.Database("tranquil_pages_test")
+
+	// Drop the test database to ensure a clean state
+	err = testDB.Drop(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the test database again
+	testDB = client.Database("tranquil_pages_test")
+
+	// Create the books collection
+	err = testDB.CreateCollection(ctx, "books")
+	if err != nil {
+		return nil, err
+	}
+
+	return testDB, nil
+}
+
+func CloseConnection() {
+	if client != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := client.Disconnect(ctx); err != nil {
+			log.Printf("Error disconnecting from MongoDB: %v", err)
+		}
+	}
 }
