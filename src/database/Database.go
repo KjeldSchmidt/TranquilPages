@@ -43,10 +43,15 @@ func GetDbHandler() (*mongo.Database, error) {
 }
 
 func GetTestDatabase() (*mongo.Database, error) {
+	connectionString, ok := os.LookupEnv("DB_URL")
+	if !ok {
+		connectionString = "mongodb://localhost:27017" // Default localhost
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	clientOptions := options.Client().ApplyURI(connectionString)
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		return nil, err
