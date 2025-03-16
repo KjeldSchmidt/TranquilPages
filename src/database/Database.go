@@ -38,7 +38,7 @@ func GetDbHandler() (*mongo.Database, error) {
 		return nil, err
 	}
 
-	db = client.Database("betterreads")
+	db = client.Database("tranquil_pages")
 	return db, nil
 }
 

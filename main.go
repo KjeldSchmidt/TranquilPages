@@ -1,11 +1,12 @@
 package main
 
 import (
-	"betterreads/src/controllers"
-	"betterreads/src/database"
-	"betterreads/src/services"
-	"github.com/gin-gonic/gin"
 	"log"
+	"tranquil-pages/src/controllers"
+	"tranquil-pages/src/database"
+	"tranquil-pages/src/services"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {

@@ -1,10 +1,6 @@
 package controllers
 
 import (
-	"betterreads/src/database"
-	"betterreads/src/models"
-	"betterreads/src/services"
-	"betterreads/src/test_utils"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -12,6 +8,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"tranquil-pages/src/database"
+	"tranquil-pages/src/models"
+	"tranquil-pages/src/services"
+	"tranquil-pages/src/test_utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

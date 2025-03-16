@@ -1,13 +1,14 @@
 package controllers
 
 import (
-	appErrors "betterreads/src/errors"
-	"betterreads/src/models"
-	"betterreads/src/services"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
+	appErrors "tranquil-pages/src/errors"
+	"tranquil-pages/src/models"
+	"tranquil-pages/src/services"
+
+	"github.com/gin-gonic/gin"
 )
 
 type BookController struct {

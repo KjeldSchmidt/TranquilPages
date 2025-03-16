@@ -1,10 +1,10 @@
 package database
 
 import (
-	"betterreads/src/models"
 	"context"
 	"testing"
 	"time"
+	"tranquil-pages/src/models"
 
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"

@@ -1,4 +1,4 @@
-module betterreads
+module tranquil-pages
 
 go 1.24
 
@@ -7,7 +7,6 @@ require (
 	github.com/google/go-cmp v0.5.5
 	github.com/stretchr/testify v1.10.0
 	go.mongodb.org/mongo-driver v1.14.0
-	gorm.io/gorm v1.25.12
 )
 
 require (
@@ -23,8 +22,6 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
