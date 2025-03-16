@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -42,7 +43,22 @@ func GetDbHandler() (*mongo.Database, error) {
 	return db, nil
 }
 
-func GetTestDatabase() (*mongo.Database, error) {
+func CloseConnection() {
+	if client != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := client.Disconnect(ctx); err != nil {
+			log.Printf("Error disconnecting from MongoDB: %v", err)
+		}
+	}
+}
+
+type TestDatabase struct {
+	client *mongo.Client
+	db     *mongo.Database
+}
+
+func NewTestDatabase() (*TestDatabase, error) {
 	connectionString, ok := os.LookupEnv("DB_URL")
 	if !ok {
 		connectionString = "mongodb://localhost:27017" // Default localhost
@@ -57,39 +73,42 @@ func GetTestDatabase() (*mongo.Database, error) {
 		return nil, err
 	}
 
-	// Ping the database to verify connection
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get the test database
-	testDB := client.Database("tranquil_pages_test")
+	testDBName := "tranquil_pages_test_" + uuid.New().String()
 
-	// Drop the test database to ensure a clean state
-	err = testDB.Drop(ctx)
-	if err != nil {
-		return nil, err
-	}
+	testDB := client.Database(testDBName)
 
-	// Create the test database again
-	testDB = client.Database("tranquil_pages_test")
-
-	// Create the books collection
 	err = testDB.CreateCollection(ctx, "books")
 	if err != nil {
 		return nil, err
 	}
 
-	return testDB, nil
+	return &TestDatabase{
+		client: client,
+		db:     testDB,
+	}, nil
 }
 
-func CloseConnection() {
-	if client != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		if err := client.Disconnect(ctx); err != nil {
-			log.Printf("Error disconnecting from MongoDB: %v", err)
-		}
+func (td *TestDatabase) GetDatabase() *mongo.Database {
+	return td.db
+}
+
+func (td *TestDatabase) Close() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := td.db.Drop(ctx); err != nil {
+		log.Printf("Error dropping test database: %v", err)
 	}
+
+	if err := td.client.Disconnect(ctx); err != nil {
+		log.Printf("Error disconnecting from MongoDB: %v", err)
+		return err
+	}
+
+	return nil
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func TestDatabaseWrite(t *testing.T) {
-	dbHandler, err := GetTestDatabase()
+	dbHandler, err := NewTestDatabase()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,14 +32,14 @@ func TestDatabaseWrite(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err = dbHandler.Collection("books").InsertOne(ctx, book)
+	_, err = dbHandler.db.Collection("books").InsertOne(ctx, book)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Retrieve book
 	var retrievedBook models.Book
-	err = dbHandler.Collection("books").FindOne(ctx, bson.M{"title": book.Title}).Decode(&retrievedBook)
+	err = dbHandler.db.Collection("books").FindOne(ctx, bson.M{"title": book.Title}).Decode(&retrievedBook)
 	if err != nil {
 		t.Fatal(err)
 	}

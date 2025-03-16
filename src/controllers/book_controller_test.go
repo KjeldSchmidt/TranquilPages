@@ -18,17 +18,18 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func getTestDependencies() *gin.Engine {
+func getTestDependencies() (*gin.Engine, *database.TestDatabase) {
 	router := gin.Default()
 
-	db, err := database.GetTestDatabase()
+	testDB, err := database.NewTestDatabase()
 	if err != nil {
 		panic(err)
 	}
-	bookService := services.NewBookService(db)
+
+	bookService := services.NewBookService(testDB.GetDatabase())
 	bookController := NewBookController(bookService)
 	bookController.SetupBookRoutes(router)
-	return router
+	return router, testDB
 }
 
 func makeRandomBook() *models.Book {
@@ -54,7 +55,8 @@ func writeBookViaApi(router *gin.Engine, book *models.Book) *models.Book {
 
 func TestBookController_GivenEmptyDatabase_ReturnsNoBooks(t *testing.T) {
 	// Given
-	router := getTestDependencies()
+	router, testDB := getTestDependencies()
+	defer testDB.Close()
 
 	// When
 	w := httptest.NewRecorder()
@@ -71,7 +73,8 @@ func TestBookController_GivenEmptyDatabase_ReturnsNoBooks(t *testing.T) {
 
 func TestBookController_GivenBookIsCreated_ReturnsThatBook(t *testing.T) {
 	// given
-	router := getTestDependencies()
+	router, testDB := getTestDependencies()
+	defer testDB.Close()
 	book := makeRandomBook()
 
 	writeBookViaApi(router, book)
@@ -92,7 +95,8 @@ func TestBookController_GivenBookIsCreated_ReturnsThatBook(t *testing.T) {
 
 func TestBookController_GivenBookIsCreated_CanFetchThatBookById(t *testing.T) {
 	// given
-	router := getTestDependencies()
+	router, testDB := getTestDependencies()
+	defer testDB.Close()
 	transientBook := makeRandomBook()
 	expectedBook := writeBookViaApi(router, transientBook)
 
@@ -111,7 +115,8 @@ func TestBookController_GivenBookIsCreated_CanFetchThatBookById(t *testing.T) {
 
 func TestBookController_GivenManyBooksAreCreated_CanFetchSpecificBookById(t *testing.T) {
 	// given
-	router := getTestDependencies()
+	router, testDB := getTestDependencies()
+	defer testDB.Close()
 	bookCount := 5
 
 	var expectedBook *models.Book
@@ -135,7 +140,8 @@ func TestBookController_GivenManyBooksAreCreated_CanFetchSpecificBookById(t *tes
 
 func TestBookController_GivenManyBooksAreCreated_ReturnsAllBooks(t *testing.T) {
 	// given
-	router := getTestDependencies()
+	router, testDB := getTestDependencies()
+	defer testDB.Close()
 	bookCount := 5
 
 	expectedBooks := make(map[primitive.ObjectID]*models.Book)
