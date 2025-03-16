@@ -11,3 +11,11 @@ resource "azurerm_key_vault_secret" "database_connection_string" {
   name         = "database-connection-string"
   value        = azurerm_cosmosdb_account.this.primary_mongodb_connection_string
 }
+
+resource "azurerm_key_vault_access_policy" "pipeline_service_principal" {
+  key_vault_id = azurerm_key_vault.this.id
+  object_id    = data.terraform_remote_state.base.outputs["pipeline_service_principal"].object_id
+  tenant_id    = data.azurerm_subscription.current.tenant_id
+
+  secret_permissions = ["Get", "List", "Set", "Delete"]
+}

@@ -18,3 +18,7 @@ output "tenant_id" {
 output "dev_resource_group" {
   value = azurerm_resource_group.dev
 }
+
+output "pipeline_service_principal" {
+  value = azuread_service_principal.this
+}

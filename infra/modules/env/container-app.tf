@@ -17,7 +17,7 @@ resource "azurerm_container_app" "this" {
     container {
       name   = "${local.project_name}-${var.env_name}-container"
       image  = "docker.io/kjeldschmidt2/tranquil-pages:latest"
-      cpu    = "0.5"
+      cpu    = "0.25"
       memory = "0.5Gi"
 
       env {
@@ -27,9 +27,18 @@ resource "azurerm_container_app" "this" {
     }
   }
 
-  secret {
-    name                = azurerm_key_vault_secret.database_connection_string.name
-    identity            = "System"
-    key_vault_secret_id = azurerm_key_vault_secret.database_connection_string.id
+  ingress {
+    target_port = 8080
+
+    traffic_weight {
+      latest_revision = true
+      percentage      = 100
+    }
   }
+
+  # secret {
+  #   name                = azurerm_key_vault_secret.database_connection_string.name
+  #   identity            = "System"
+  #   key_vault_secret_id = azurerm_key_vault_secret.database_connection_string.id
+  # }
 }
