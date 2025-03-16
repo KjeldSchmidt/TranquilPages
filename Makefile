@@ -1,5 +1,5 @@
 build:
-	CGO_ENABLED=1 go build -o ./build/betterreads
+	CGO_ENABLED=1 go build -o ./build/tranquil-pages
 
 test:
 	DB_TYPE=sqlite DATABASE_URL=:memory: go test ./...
