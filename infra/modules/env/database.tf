@@ -2,7 +2,7 @@ resource "azurerm_cosmosdb_account" "this" {
   name                 = "${local.project_name}-${var.env_name}-cosmos"
   location             = data.azurerm_resource_group.rg.location
   resource_group_name  = data.azurerm_resource_group.rg.name
-  kind                 = "GlobalDocumentDB"
+  kind                 = "MongoDB"
   offer_type           = "Standard"
   mongo_server_version = "7.0"
 
