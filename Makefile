@@ -33,4 +33,10 @@ tf-apply-auto:
 quality-gates: fmt vet test build tf-validate
 	echo "✅✅✅"
 
+build-image:
+	sudo docker build . -t kjeldschmidt2/tranquil-pages:latest
+
+push-image:
+	sudo docker push kjeldschmidt2/tranquil-pages:latest
+
 .PHONY: build

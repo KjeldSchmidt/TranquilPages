@@ -7,6 +7,8 @@ terraform {
   }
 }
 
+data "azurerm_subscription" "current" {}
+
 resource "azurerm_storage_account" "storage" {
   account_replication_type = "LRS"
   account_tier             = "Standard"
