@@ -5,6 +5,20 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok' --eval 'quit()'"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 5
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: ephemeral-test-db
+
     steps:
       - uses: actions/checkout@v4
 
@@ -32,6 +46,8 @@ jobs:
         run: make vet
 
       - name: Test
+        env:
+          DB_URL: mongodb://root:ephemeral-test-db@localhost:27017
         run: make test
 
       - name: Build
