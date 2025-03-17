@@ -32,7 +32,7 @@ resource "azurerm_container_app" "this" {
   }
 
   ingress {
-    target_port = 8080
+    target_port      = 8080
     external_enabled = true
 
     traffic_weight {
