@@ -10,6 +10,10 @@ resource "azurerm_container_app" "this" {
   container_app_environment_id = azurerm_container_app_environment.this.id
   revision_mode                = "Single"
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   template {
     min_replicas = 0
     max_replicas = 1
@@ -29,6 +33,7 @@ resource "azurerm_container_app" "this" {
 
   ingress {
     target_port = 8080
+    external_enabled = true
 
     traffic_weight {
       latest_revision = true
@@ -36,9 +41,19 @@ resource "azurerm_container_app" "this" {
     }
   }
 
-  # secret {
-  #   name                = azurerm_key_vault_secret.database_connection_string.name
-  #   identity            = "System"
-  #   key_vault_secret_id = azurerm_key_vault_secret.database_connection_string.id
-  # }
+  secret {
+    name  = azurerm_key_vault_secret.database_connection_string.name
+    value = azurerm_key_vault_secret.database_connection_string.value
+  }
+}
+
+resource "azurerm_key_vault_access_policy" "container_app" {
+  key_vault_id = azurerm_key_vault.this.id
+  tenant_id    = data.azurerm_subscription.current.tenant_id
+  object_id    = azurerm_container_app.this.identity[0].principal_id
+
+  secret_permissions = [
+    "Get",
+    "List"
+  ]
 }
