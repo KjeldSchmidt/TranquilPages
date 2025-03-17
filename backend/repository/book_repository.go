@@ -4,9 +4,9 @@ import (
 	"errors"
 	"log"
 	"time"
-	"tranquil-pages/src/database"
-	appErrors "tranquil-pages/src/errors"
-	"tranquil-pages/src/models"
+	"tranquil-pages/database"
+	appErrors "tranquil-pages/errors"
+	"tranquil-pages/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

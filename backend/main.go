@@ -2,10 +2,10 @@ package main
 
 import (
 	"log"
-	"tranquil-pages/src/controllers"
-	"tranquil-pages/src/database"
-	"tranquil-pages/src/repository"
-	"tranquil-pages/src/services"
+	"tranquil-pages/controllers"
+	"tranquil-pages/database"
+	"tranquil-pages/repository"
+	"tranquil-pages/services"
 
 	"github.com/gin-gonic/gin"
 )

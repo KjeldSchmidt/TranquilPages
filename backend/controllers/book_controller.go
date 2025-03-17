@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	appErrors "tranquil-pages/src/errors"
-	"tranquil-pages/src/models"
-	"tranquil-pages/src/services"
+	appErrors "tranquil-pages/errors"
+	"tranquil-pages/models"
+	"tranquil-pages/services"
 
 	"github.com/gin-gonic/gin"
 )

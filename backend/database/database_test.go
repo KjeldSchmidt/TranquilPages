@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 	"time"
-	"tranquil-pages/src/models"
+	"tranquil-pages/models"
 
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"

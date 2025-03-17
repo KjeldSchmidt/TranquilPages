@@ -1,28 +1,25 @@
 build:
-	go build -o ./build/tranquil-pages
+	cd backend && make build
 
 test:
-	go test ./...
+	cd backend && make test
 
 fmt:
-	go fmt ./...
+	cd backend && make fmt
 	cd infra && terraform fmt -recursive .
 
 fmt-check:
-	@echo "Checking Go code formatting..."
-	@if gofmt -l . | tee /dev/stderr | grep .; then \
-		echo "Go files are not formatted!"; \
-		exit 1; \
-	fi
+	cd backend && make fmt-check
 	@echo "Checking Terraform formatting..."
 	cd infra && terraform fmt -recursive -check .
 
 run:
 	sudo docker start mongodb
-	DB_URL="mongodb://localhost:27017" go run main.go
+	cd backend && DB_URL="mongodb://localhost:27017" go run main.go
 
-vet:
-	go vet ./...
+lint:
+	cd backend && make vet
+	make tf-validate
 
 tf-validate:
 	cd infra/base && terraform init && terraform validate
@@ -32,14 +29,14 @@ tf-apply-auto:
 	@if [ -z "$(env)" ]; then echo "Error: env is not set. Please pass by name: env=<dev|staging|prod>."; exit 1; fi
 	cd "infra/env/${env}" && terraform init && terraform apply -auto-approve
 
-quality-gates: fmt vet test build tf-validate
+quality-gates: fmt lint test build tf-validate
 	echo "✅✅✅"
 
 build-image:
-	docker build . -t kjeldschmidt2/tranquil-pages:latest
+	cd backend && make build-image
 
 push-image:
-	docker push kjeldschmidt2/tranquil-pages:latest
+	cd backend && make push-image
 
 reset-local-db:
 	sudo docker stop mongodb

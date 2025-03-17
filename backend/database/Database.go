@@ -14,7 +14,7 @@ import (
 // DefaultTimeout is the default timeout for database operations
 const DefaultTimeout = 10 * time.Second
 
-// WithTimeout creates a new context with the default timeout
+// WithTimeout creates a new context with the DefaultTimeout
 func WithTimeout() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), DefaultTimeout)
 }

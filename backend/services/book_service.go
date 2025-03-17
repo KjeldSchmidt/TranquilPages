@@ -1,9 +1,9 @@
 package services
 
 import (
-	appErrors "tranquil-pages/src/errors"
-	"tranquil-pages/src/models"
-	"tranquil-pages/src/repository"
+	appErrors "tranquil-pages/errors"
+	"tranquil-pages/models"
+	"tranquil-pages/repository"
 )
 
 type BookService struct {
