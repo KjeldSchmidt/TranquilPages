@@ -33,27 +33,27 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-
       - name: Formatting validation
         run: make fmt-check
-
-      - name: Lint validation
-        run: make lint
 
       - name: Test
         env:
           DB_URL: mongodb://root:ephemeral-test-db@localhost:27017/admin?authSource=admin
         run: make test
 
-      - name: Build
-        run: make build
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
 
       - name: Configure Azure CLI
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }} # See https://github.com/Azure/login?tab=readme-ov-file#login-with-a-service-principal-secret
+
+      - name: Lint validation
+        run: make lint
+
+      - name: Build
+        run: make build
 
       - name: terraform validate
         run: make tf-validate
