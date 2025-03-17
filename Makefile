@@ -1,5 +1,5 @@
 build:
-	CGO_ENABLED=1 go build -o ./build/tranquil-pages
+	go build -o ./build/tranquil-pages
 
 test:
 	go test ./...
@@ -18,7 +18,8 @@ fmt-check:
 	cd infra && terraform fmt -recursive -check .
 
 run:
-	DB_TYPE=sqlite DATABASE_URL=local.db go run main.go
+	sudo docker start mongodb
+	DB_URL="mongodb://localhost:27017" go run main.go
 
 vet:
 	go vet ./...
@@ -38,5 +39,10 @@ build-image:
 
 push-image:
 	sudo docker push kjeldschmidt2/tranquil-pages:latest
+
+reset-local-db:
+	sudo docker stop mongodb
+	sudo docker rm mongodb
+	sudo docker run -d --name mongodb -p 27017:27017 mongo:latest
 
 .PHONY: build
