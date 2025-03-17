@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	appErrors "tranquil-pages/src/errors"
 	"tranquil-pages/src/models"
 	"tranquil-pages/src/repository"
@@ -20,17 +19,17 @@ func (s *BookService) CreateBook(book *models.Book) error {
 		return appErrors.ErrInvalidRating
 	}
 
-	return s.repo.Create(context.Background(), book)
+	return s.repo.Create(book)
 }
 
 func (s *BookService) GetAllBooks() ([]models.Book, error) {
-	return s.repo.FindAll(context.Background())
+	return s.repo.FindAll()
 }
 
 func (s *BookService) GetBookById(id string) (*models.Book, error) {
-	return s.repo.FindById(context.Background(), id)
+	return s.repo.FindById(id)
 }
 
 func (s *BookService) DeleteBook(id string) error {
-	return s.repo.Delete(context.Background(), id)
+	return s.repo.Delete(id)
 }

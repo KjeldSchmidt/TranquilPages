@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"context"
 	"errors"
 	"log"
 	"time"
@@ -15,10 +14,10 @@ import (
 )
 
 type BookRepository interface {
-	Create(ctx context.Context, book *models.Book) error
-	FindAll(ctx context.Context) ([]models.Book, error)
-	FindById(ctx context.Context, id string) (*models.Book, error)
-	Delete(ctx context.Context, id string) error
+	Create(book *models.Book) error
+	FindAll() ([]models.Book, error)
+	FindById(id string) (*models.Book, error)
+	Delete(id string) error
 }
 
 type MongoBookRepository struct {
@@ -29,40 +28,54 @@ func NewBookRepository(db *database.Database) BookRepository {
 	return &MongoBookRepository{db: db}
 }
 
-func (r *MongoBookRepository) Create(ctx context.Context, book *models.Book) error {
-	book.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	book.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
-
-	result, err := r.db.GetCollection("books").InsertOne(ctx, book)
+func (r *MongoBookRepository) handleDBError(err error, operation string) error {
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			return appErrors.ErrDuplicateBook
 		}
-		log.Printf("Database error in CreateBook: %v", err)
+		log.Printf("Database error in %s: %v", operation, err)
 		return appErrors.ErrDatabase
+	}
+	return nil
+}
+
+func (r *MongoBookRepository) Create(book *models.Book) error {
+	ctx, cancel := database.WithTimeout()
+	defer cancel()
+
+	book.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+	book.UpdatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	result, err := r.db.GetCollection("books").InsertOne(ctx, book)
+	if err := r.handleDBError(err, "CreateBook"); err != nil {
+		return err
 	}
 
 	book.ID = result.InsertedID.(primitive.ObjectID)
 	return nil
 }
 
-func (r *MongoBookRepository) FindAll(ctx context.Context) ([]models.Book, error) {
+func (r *MongoBookRepository) FindAll() ([]models.Book, error) {
+	ctx, cancel := database.WithTimeout()
+	defer cancel()
+
 	cursor, err := r.db.GetCollection("books").Find(ctx, bson.M{})
-	if err != nil {
-		log.Printf("Database error in GetAllBooks: %v", err)
-		return nil, appErrors.ErrDatabase
+	if err := r.handleDBError(err, "GetAllBooks"); err != nil {
+		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var books []models.Book
-	if err = cursor.All(ctx, &books); err != nil {
-		log.Printf("Database error in GetAllBooks cursor.All: %v", err)
-		return nil, appErrors.ErrDatabase
+	if err := r.handleDBError(cursor.All(ctx, &books), "GetAllBooks cursor.All"); err != nil {
+		return nil, err
 	}
 	return books, nil
 }
 
-func (r *MongoBookRepository) FindById(ctx context.Context, id string) (*models.Book, error) {
+func (r *MongoBookRepository) FindById(id string) (*models.Book, error) {
+	ctx, cancel := database.WithTimeout()
+	defer cancel()
+
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, appErrors.ErrInvalidID
@@ -74,23 +87,20 @@ func (r *MongoBookRepository) FindById(ctx context.Context, id string) (*models.
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, appErrors.ErrNotFound
 		}
-		log.Printf("Database error in GetBookById: %v", err)
-		return nil, appErrors.ErrDatabase
+		return nil, r.handleDBError(err, "GetBookById")
 	}
 	return &book, nil
 }
 
-func (r *MongoBookRepository) Delete(ctx context.Context, id string) error {
+func (r *MongoBookRepository) Delete(id string) error {
+	ctx, cancel := database.WithTimeout()
+	defer cancel()
+
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return appErrors.ErrInvalidID
 	}
 
 	_, err = r.db.GetCollection("books").DeleteOne(ctx, bson.M{"_id": objectID})
-	if err != nil {
-		log.Printf("Database error in DeleteBook: %v", err)
-		return appErrors.ErrDatabase
-	}
-
-	return nil
+	return r.handleDBError(err, "DeleteBook")
 }
