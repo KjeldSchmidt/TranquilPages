@@ -10,6 +10,7 @@ import (
 	"testing"
 	"tranquil-pages/src/database"
 	"tranquil-pages/src/models"
+	"tranquil-pages/src/repository"
 	"tranquil-pages/src/services"
 	"tranquil-pages/src/test_utils"
 
@@ -26,7 +27,8 @@ func getTestDependencies() (*gin.Engine, *database.TestDatabase) {
 		panic(err)
 	}
 
-	bookService := services.NewBookService(testDB.Database)
+	bookRepo := repository.NewBookRepository(testDB.Database)
+	bookService := services.NewBookService(bookRepo)
 	bookController := NewBookController(bookService)
 	bookController.SetupBookRoutes(router)
 	return router, testDB

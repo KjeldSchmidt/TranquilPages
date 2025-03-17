@@ -4,34 +4,40 @@ import (
 	"log"
 	"tranquil-pages/src/controllers"
 	"tranquil-pages/src/database"
+	"tranquil-pages/src/repository"
 	"tranquil-pages/src/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	// Initialize database
 	db, err := database.GetDatabase()
 	if err != nil {
-		log.Fatalf("Error setting up database: %v", err)
+		log.Fatal("Failed to connect to database:", err)
 	}
+	defer db.Close()
 
-	router := gin.Default()
-	router.Use(func(c *gin.Context) {
-		c.Set("db", db)
-		c.Next()
-	})
+	// Initialize repository
+	bookRepo := repository.NewBookRepository(db)
 
-	bookService := services.NewBookService(db)
+	// Initialize service
+	bookService := services.NewBookService(bookRepo)
+
+	// Initialize controller
 	bookController := controllers.NewBookController(bookService)
 
-	bookController.SetupBookRoutes(router)
+	// Setup router
+	router := gin.Default()
 
-	err = router.SetTrustedProxies(nil)
-	if err != nil {
-		panic("We... failed at not trusting any proxies...? I guess?")
-	}
+	// Book routes
+	router.POST("/books", bookController.CreateBook)
+	router.GET("/books", bookController.ListBooks)
+	router.GET("/books/:id", bookController.GetBook)
+	router.DELETE("/books/:id", bookController.DeleteBook)
 
+	// Start server
 	if err := router.Run(":8080"); err != nil {
-		log.Fatalf("Failed to start the server: %v", err)
+		log.Fatal("Failed to start server:", err)
 	}
 }
