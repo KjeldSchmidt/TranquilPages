@@ -11,12 +11,24 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var client *mongo.Client
-var db *mongo.Database
+// DefaultTimeout is the default timeout for database operations
+const DefaultTimeout = 10 * time.Second
 
-func GetDbHandler() (*mongo.Database, error) {
-	if db != nil {
-		return db, nil
+// WithTimeout creates a new context with the default timeout
+func WithTimeout() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), DefaultTimeout)
+}
+
+type Database struct {
+	client *mongo.Client
+	db     *mongo.Database
+}
+
+var globalDB *Database
+
+func GetDatabase() (*Database, error) {
+	if globalDB != nil {
+		return globalDB, nil
 	}
 
 	connectionString, ok := os.LookupEnv("DB_URL")
@@ -24,7 +36,7 @@ func GetDbHandler() (*mongo.Database, error) {
 		panic("Environment variable DB_URL is not set")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := WithTimeout()
 	defer cancel()
 
 	clientOptions := options.Client().ApplyURI(connectionString)
@@ -39,23 +51,31 @@ func GetDbHandler() (*mongo.Database, error) {
 		return nil, err
 	}
 
-	db = client.Database("tranquil_pages")
-	return db, nil
+	globalDB = &Database{
+		client: client,
+		db:     client.Database("tranquil_pages"),
+	}
+	return globalDB, nil
 }
 
-func CloseConnection() {
-	if client != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (d *Database) GetCollection(name string) *mongo.Collection {
+	return d.db.Collection(name)
+}
+
+func (d *Database) Close() error {
+	if d.client != nil {
+		ctx, cancel := WithTimeout()
 		defer cancel()
-		if err := client.Disconnect(ctx); err != nil {
+		if err := d.client.Disconnect(ctx); err != nil {
 			log.Printf("Error disconnecting from MongoDB: %v", err)
+			return err
 		}
 	}
+	return nil
 }
 
 type TestDatabase struct {
-	client *mongo.Client
-	db     *mongo.Database
+	*Database
 }
 
 func NewTestDatabase() (*TestDatabase, error) {
@@ -64,7 +84,7 @@ func NewTestDatabase() (*TestDatabase, error) {
 		connectionString = "mongodb://localhost:27017" // Default localhost
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := WithTimeout()
 	defer cancel()
 
 	clientOptions := options.Client().ApplyURI(connectionString)
@@ -79,7 +99,6 @@ func NewTestDatabase() (*TestDatabase, error) {
 	}
 
 	testDBName := "tranquil_pages_test_" + uuid.New().String()
-
 	testDB := client.Database(testDBName)
 
 	err = testDB.CreateCollection(ctx, "books")
@@ -88,17 +107,15 @@ func NewTestDatabase() (*TestDatabase, error) {
 	}
 
 	return &TestDatabase{
-		client: client,
-		db:     testDB,
+		Database: &Database{
+			client: client,
+			db:     testDB,
+		},
 	}, nil
 }
 
-func (td *TestDatabase) GetDatabase() *mongo.Database {
-	return td.db
-}
-
 func (td *TestDatabase) Close() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := WithTimeout()
 	defer cancel()
 
 	if err := td.db.Drop(ctx); err != nil {

@@ -16,7 +16,7 @@ func TestDatabaseWrite(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer CloseConnection()
+	defer dbHandler.Close()
 
 	// Create test book
 	book := models.Book{
@@ -32,14 +32,14 @@ func TestDatabaseWrite(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	_, err = dbHandler.db.Collection("books").InsertOne(ctx, book)
+	_, err = dbHandler.GetCollection("books").InsertOne(ctx, book)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Retrieve book
 	var retrievedBook models.Book
-	err = dbHandler.db.Collection("books").FindOne(ctx, bson.M{"title": book.Title}).Decode(&retrievedBook)
+	err = dbHandler.GetCollection("books").FindOne(ctx, bson.M{"title": book.Title}).Decode(&retrievedBook)
 	if err != nil {
 		t.Fatal(err)
 	}

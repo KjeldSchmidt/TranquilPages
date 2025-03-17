@@ -26,6 +26,17 @@ func (bc *BookController) SetupBookRoutes(router *gin.Engine) {
 	router.DELETE("/books/:id", bc.DeleteBook)
 }
 
+func (bc *BookController) handleError(c *gin.Context, err error) {
+	switch {
+	case errors.Is(err, appErrors.ErrNotFound):
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Book with id %s not found", c.Param("id"))})
+	case errors.Is(err, appErrors.ErrDatabase):
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+}
+
 func (bc *BookController) CreateBook(c *gin.Context) {
 	var book models.Book
 	if err := c.ShouldBindJSON(&book); err != nil {
@@ -35,7 +46,7 @@ func (bc *BookController) CreateBook(c *gin.Context) {
 
 	err := bc.bookService.CreateBook(&book)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		bc.handleError(c, err)
 		return
 	}
 
@@ -43,9 +54,10 @@ func (bc *BookController) CreateBook(c *gin.Context) {
 }
 
 func (bc *BookController) ListBooks(c *gin.Context) {
-	var books, err = bc.bookService.GetAllBooks()
+	books, err := bc.bookService.GetAllBooks()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		bc.handleError(c, err)
+		return
 	}
 
 	if books == nil {
@@ -56,21 +68,19 @@ func (bc *BookController) ListBooks(c *gin.Context) {
 }
 
 func (bc *BookController) GetBook(c *gin.Context) {
-	var book, err = bc.bookService.GetBookById(c.Param("id"))
-	switch {
-	case errors.Is(err, appErrors.ErrNotFound):
-		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Book with id %s not found", c.Param("id"))})
-	case errors.Is(err, appErrors.ErrDatabase):
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	case err == nil:
-		c.JSON(http.StatusOK, book)
+	book, err := bc.bookService.GetBookById(c.Param("id"))
+	if err != nil {
+		bc.handleError(c, err)
+		return
 	}
+
+	c.JSON(http.StatusOK, book)
 }
 
 func (bc *BookController) DeleteBook(c *gin.Context) {
 	err := bc.bookService.DeleteBook(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		bc.handleError(c, err)
 		return
 	}
 	c.Status(http.StatusNoContent)

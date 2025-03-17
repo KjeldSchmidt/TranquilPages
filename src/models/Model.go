@@ -16,7 +16,8 @@ type Book struct {
 	UpdatedAt primitive.DateTime `bson:"updated_at" json:"updated_at"`
 }
 
+var bookCompareOptions = cmpopts.IgnoreFields(Book{}, "ID", "CreatedAt", "UpdatedAt")
+
 func CompareBooks(expected, actual *Book) bool {
-	ignoreFields := cmpopts.IgnoreFields(Book{}, "ID", "CreatedAt", "UpdatedAt")
-	return cmp.Equal(expected, actual, ignoreFields)
+	return cmp.Equal(expected, actual, bookCompareOptions)
 }

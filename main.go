@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	db, err := database.GetDbHandler()
+	db, err := database.GetDatabase()
 	if err != nil {
 		log.Fatalf("Error setting up database: %v", err)
 	}
