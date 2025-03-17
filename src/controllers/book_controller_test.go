@@ -41,7 +41,7 @@ func makeRandomBook() *models.Book {
 	return &book
 }
 
-func writeBookViaApi(router *gin.Engine, book *models.Book) *models.Book {
+func createBookViaApi(router *gin.Engine, book *models.Book) *models.Book {
 	w := httptest.NewRecorder()
 	bookJson, _ := json.Marshal(book)
 	req, _ := http.NewRequest("POST", "/books", bytes.NewReader(bookJson))
@@ -79,7 +79,7 @@ func TestBookController_GivenBookIsCreated_ReturnsThatBook(t *testing.T) {
 	defer testDB.Close()
 	book := makeRandomBook()
 
-	writeBookViaApi(router, book)
+	createBookViaApi(router, book)
 
 	// when
 	w := httptest.NewRecorder()
@@ -100,7 +100,7 @@ func TestBookController_GivenBookIsCreated_CanFetchThatBookById(t *testing.T) {
 	router, testDB := getTestDependencies()
 	defer testDB.Close()
 	transientBook := makeRandomBook()
-	expectedBook := writeBookViaApi(router, transientBook)
+	expectedBook := createBookViaApi(router, transientBook)
 
 	// when
 	w := httptest.NewRecorder()
@@ -124,7 +124,7 @@ func TestBookController_GivenManyBooksAreCreated_CanFetchSpecificBookById(t *tes
 	var expectedBook *models.Book
 	for i := 0; i < bookCount; i++ {
 		transientBook := makeRandomBook()
-		expectedBook = writeBookViaApi(router, transientBook)
+		expectedBook = createBookViaApi(router, transientBook)
 	}
 
 	// when
@@ -149,7 +149,7 @@ func TestBookController_GivenManyBooksAreCreated_ReturnsAllBooks(t *testing.T) {
 	expectedBooks := make(map[primitive.ObjectID]*models.Book)
 	for i := 0; i < bookCount; i++ {
 		transientBook := makeRandomBook()
-		book := writeBookViaApi(router, transientBook)
+		book := createBookViaApi(router, transientBook)
 		expectedBooks[book.ID] = book
 	}
 
@@ -168,4 +168,42 @@ func TestBookController_GivenManyBooksAreCreated_ReturnsAllBooks(t *testing.T) {
 		assert.True(t, models.CompareBooks(expectedBook, &actualBook))
 	}
 	assert.Equal(t, len(expectedBooks), len(actualBooks))
+}
+
+func TestBookController_CanDeleteExistingBook(t *testing.T) {
+	// given
+	router, testDB := getTestDependencies()
+	defer testDB.Close()
+	book := makeRandomBook()
+	createdBook := createBookViaApi(router, book)
+
+	// when
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/books/%s", createdBook.ID.Hex()), nil)
+	router.ServeHTTP(w, req)
+
+	// then
+	assert.Equal(t, http.StatusNoContent, w.Code)
+
+	// and then
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/books", nil)
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, "[]", w.Body.String())
+}
+
+func TestBookController_CanDeleteNonExistentBook(t *testing.T) {
+	// given
+	router, testDB := getTestDependencies()
+	defer testDB.Close()
+	nonExistentID := primitive.NewObjectID()
+
+	// when
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/books/%s", nonExistentID.Hex()), nil)
+	router.ServeHTTP(w, req)
+
+	// then
+	assert.Equal(t, http.StatusNoContent, w.Code)
 }

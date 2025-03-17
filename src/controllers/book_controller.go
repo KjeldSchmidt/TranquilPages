@@ -23,6 +23,7 @@ func (bc *BookController) SetupBookRoutes(router *gin.Engine) {
 	router.POST("/books", bc.CreateBook)
 	router.GET("/books", bc.ListBooks)
 	router.GET("/books/:id", bc.GetBook)
+	router.DELETE("/books/:id", bc.DeleteBook)
 }
 
 func (bc *BookController) CreateBook(c *gin.Context) {
@@ -64,4 +65,13 @@ func (bc *BookController) GetBook(c *gin.Context) {
 	case err == nil:
 		c.JSON(http.StatusOK, book)
 	}
+}
+
+func (bc *BookController) DeleteBook(c *gin.Context) {
+	err := bc.bookService.DeleteBook(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusNoContent)
 }

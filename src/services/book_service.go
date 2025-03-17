@@ -73,3 +73,20 @@ func (s *BookService) GetBookById(id string) (*models.Book, error) {
 	}
 	return &book, nil
 }
+
+func (s *BookService) DeleteBook(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return appErrors.ErrNotFound
+	}
+
+	_, err = s.db.Collection("books").DeleteOne(ctx, bson.M{"_id": objectID})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
