@@ -11,7 +11,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=1 go build -o tranquil-pages
+RUN go build -o tranquil-pages
 
 
 #################

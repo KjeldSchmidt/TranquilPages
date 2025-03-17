@@ -77,3 +77,16 @@ jobs:
 
       - name: Terraform Apply
         run: make tf-apply-auto env=dev
+
+      - name: Build and Push Docker Image
+        run: |
+          make build-image
+          echo "${{ secrets.DOCKER_API_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          make push-image
+
+      - name: Update Container App version
+        run: |
+          az containerapp update \
+            --name tranquil-pages-dev-container-app \
+            --resource-group tranquil-pages-dev-rg \
+            --image docker.io/kjeldschmidt2/tranquil-pages:latest
