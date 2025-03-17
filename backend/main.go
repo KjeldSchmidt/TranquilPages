@@ -18,23 +18,20 @@ func main() {
 	}
 	defer db.Close()
 
-	// Initialize repository
+	// Initialize repositories
 	bookRepo := repository.NewBookRepository(db)
 
-	// Initialize service
+	// Initialize services
 	bookService := services.NewBookService(bookRepo)
 
-	// Initialize controller
+	// Initialize controllers
 	bookController := controllers.NewBookController(bookService)
 
 	// Setup router
 	router := gin.Default()
 
-	// Book routes
-	router.POST("/books", bookController.CreateBook)
-	router.GET("/books", bookController.ListBooks)
-	router.GET("/books/:id", bookController.GetBook)
-	router.DELETE("/books/:id", bookController.DeleteBook)
+	// Setup routes
+	bookController.SetupBookRoutes(router)
 
 	// Start server
 	if err := router.Run(":8080"); err != nil {
