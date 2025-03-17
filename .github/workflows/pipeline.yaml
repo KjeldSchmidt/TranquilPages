@@ -33,9 +33,6 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Install dependencies
-        run: go mod tidy
-
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
 

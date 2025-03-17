@@ -1,4 +1,5 @@
 build:
+	go mod download
 	go build -o ./build/tranquil-pages
 
 test:
