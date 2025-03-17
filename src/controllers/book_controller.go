@@ -47,6 +47,10 @@ func (bc *BookController) ListBooks(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
+	if books == nil {
+		books = []models.Book{} // Ensure an empty slice instead of nil
+	}
+
 	c.JSON(http.StatusOK, books)
 }
 

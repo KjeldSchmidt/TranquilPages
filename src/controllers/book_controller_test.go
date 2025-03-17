@@ -67,6 +67,8 @@ func TestBookController_GivenEmptyDatabase_ReturnsNoBooks(t *testing.T) {
 	var books []models.Book
 	assert.Equal(t, http.StatusOK, w.Code)
 
+	assert.Equal(t, "[]", w.Body.String()) // We want to return an empty list, not an empty body or null object
+
 	_ = json.Unmarshal(w.Body.Bytes(), &books)
 	assert.Equal(t, 0, len(books))
 }
