@@ -25,7 +25,7 @@ jobs:
       - name: Get Go version from go.mod
         id: get-go-version
         run: |
-          go_version=$(grep -oP 'go \K[0-9\.]+' go.mod)
+          go_version=$(grep -oP 'go \K[0-9\.]+' backend/go.mod)
           echo "GO_VERSION=$go_version" >> $GITHUB_ENV
 
       - name: Set up Go
