@@ -3,7 +3,6 @@ build:
 	go build -o ./build/tranquil-pages
 
 test:
-	sudo docker start mongodb
 	go test ./...
 
 fmt:
@@ -17,7 +16,6 @@ fmt-check:
 	fi
 
 run:
-	sudo docker start mongodb
 	DB_URL="mongodb://localhost:27017" go run main.go
 
 lint:
@@ -36,5 +34,11 @@ reset-local-db:
 	sudo docker stop mongodb
 	sudo docker rm mongodb
 	sudo docker run -d --name mongodb -p 27017:27017 mongo:latest
+
+start-local-db:
+	sudo docker start mongodb
+
+autostart-local-db:
+	sudo docker update --restart unless-stopped mongodb
 
 .PHONY: build
