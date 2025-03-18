@@ -28,6 +28,16 @@ resource "azurerm_container_app" "this" {
         name        = "DB_URL"
         secret_name = azurerm_key_vault_secret.database_connection_string.name
       }
+
+      env {
+        name        = "OAUTH_CLIENT_ID"
+        secret_name = azurerm_key_vault_secret.user_login_oauth_client_id.name
+      }
+
+      env {
+        name        = "OAUTH_CLIENT_SECRET"
+        secret_name = azurerm_key_vault_secret.user_login_oauth_client_secret.name
+      }
     }
   }
 
@@ -44,6 +54,16 @@ resource "azurerm_container_app" "this" {
   secret {
     name  = azurerm_key_vault_secret.database_connection_string.name
     value = azurerm_key_vault_secret.database_connection_string.value
+  }
+
+  secret {
+    name  = azurerm_key_vault_secret.user_login_oauth_client_id.name
+    value = azurerm_key_vault_secret.user_login_oauth_client_id.value
+  }
+
+  secret {
+    name  = azurerm_key_vault_secret.user_login_oauth_client_secret.name
+    value = azurerm_key_vault_secret.user_login_oauth_client_secret.value
   }
 }
 

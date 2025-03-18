@@ -12,6 +12,18 @@ resource "azurerm_key_vault_secret" "database_connection_string" {
   value        = azurerm_cosmosdb_account.this.primary_mongodb_connection_string
 }
 
+resource "azurerm_key_vault_secret" "user_login_oauth_client_id" {
+  key_vault_id = azurerm_key_vault.this.id
+  name         = "user-login-oauth-client-id"
+  value        = "Placeholder"
+}
+
+resource "azurerm_key_vault_secret" "user_login_oauth_client_secret" {
+  key_vault_id = azurerm_key_vault.this.id
+  name         = "user-login-oauth-client-secret"
+  value        = "Placeholder"
+}
+
 resource "azurerm_key_vault_access_policy" "pipeline_service_principal" {
   key_vault_id = azurerm_key_vault.this.id
   object_id    = data.terraform_remote_state.base.outputs["pipeline_service_principal"].object_id
