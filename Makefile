@@ -6,24 +6,19 @@ test:
 
 fmt:
 	cd backend && make fmt
-	cd infra && terraform fmt -recursive .
+	cd infra && make fmt
 
 fmt-check:
 	cd backend && make fmt-check
-	@echo "Checking Terraform formatting..."
-	cd infra && terraform fmt -recursive -check .
+	cd infra && make fmt-check
 
 run:
 	sudo docker start mongodb
 	cd backend && DB_URL="mongodb://localhost:27017" go run main.go
 
 lint:
-	cd backend && make vet
-	make tf-validate
-
-tf-validate:
-	cd infra/base && terraform init && terraform validate
-	cd infra/env/dev && terraform init && terraform validate
+	cd backend && make lint
+	cd infra && make lint
 
 tf-apply-auto:
 	@if [ -z "$(env)" ]; then echo "Error: env is not set. Please pass by name: env=<dev|staging|prod>."; exit 1; fi

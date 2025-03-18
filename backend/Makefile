@@ -3,6 +3,7 @@ build:
 	go build -o ./build/tranquil-pages
 
 test:
+	sudo docker start mongodb
 	go test ./...
 
 fmt:
@@ -19,7 +20,7 @@ run:
 	sudo docker start mongodb
 	DB_URL="mongodb://localhost:27017" go run main.go
 
-vet:
+lint:
 	go vet ./...
 
 quality-gates: fmt vet test build
