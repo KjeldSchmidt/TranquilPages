@@ -30,7 +30,7 @@ func getTestDependencies() (*gin.Engine, *database.TestDatabase) {
 	bookRepo := repository.NewBookRepository(testDB.Database)
 	bookService := services.NewBookService(bookRepo)
 	bookController := NewBookController(bookService)
-	bookController.SetupBookRoutes(router)
+	bookController.SetupBookRoutes(router.Group("/"))
 	return router, testDB
 }
 

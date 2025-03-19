@@ -1,6 +1,9 @@
 package errors
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	ErrNotFound      = errors.New("Record not found")
@@ -10,3 +13,7 @@ var (
 	ErrDuplicateBook = errors.New("A book with this title already exists")
 	ErrConnection    = errors.New("Failed to connect to database")
 )
+
+func ErrEnvNotSet(varName string) error {
+	return fmt.Errorf("environment variable %s not set", varName)
+}

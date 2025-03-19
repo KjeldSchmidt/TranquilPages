@@ -16,12 +16,12 @@ fmt-check:
 	fi
 
 run:
-	DB_URL="mongodb://localhost:27017" go run main.go
+	 dotenvx run -f ../.env.local -- go run main.go
 
 lint:
 	go vet ./...
 
-quality-gates: fmt vet test build
+quality-gates: fmt lint test build
 	echo "✅✅✅"
 
 build-image:

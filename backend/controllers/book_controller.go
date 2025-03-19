@@ -19,7 +19,7 @@ func NewBookController(bookService *services.BookService) *BookController {
 	return &BookController{bookService: bookService}
 }
 
-func (bc *BookController) SetupBookRoutes(router *gin.Engine) {
+func (bc *BookController) SetupBookRoutes(router *gin.RouterGroup) {
 	router.POST("/books", bc.CreateBook)
 	router.GET("/books", bc.ListBooks)
 	router.GET("/books/:id", bc.GetBook)

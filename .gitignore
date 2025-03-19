@@ -1,4 +1,5 @@
 build/
 .idea/
+.env.local
 
 local.db

@@ -13,8 +13,7 @@ fmt-check:
 	cd infra && make fmt-check
 
 run:
-	sudo docker start mongodb
-	cd backend && DB_URL="mongodb://localhost:27017" go run main.go
+	cd backend && make run
 
 lint:
 	cd backend && make lint
@@ -38,7 +37,8 @@ reset-local-db:
 	sudo docker rm mongodb
 	sudo docker run -d --name mongodb -p 27017:27017 mongo:latest
 
-install-hooks:
+install-repo-dependencies:
 	git config core.hooksPath ./.githooks
+	curl -fsS https://dotenvx.sh | sudo sh
 
 .PHONY: build
