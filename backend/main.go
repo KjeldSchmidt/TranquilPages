@@ -32,7 +32,9 @@ func main() {
 	if err := auth.InitOAuthConfig(); err != nil {
 		log.Fatal("Failed to initialize OAuth config:", err)
 	}
-	authService := auth.NewAuthService(auth.OAuthConfig)
+	stateRepo := auth.NewOAuthStateRepository(db)
+	authService := auth.NewAuthService(auth.OAuthConfig, stateRepo)
+	defer authService.Shutdown()
 	authController := auth.NewAuthController(authService)
 
 	// Setup router

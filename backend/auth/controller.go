@@ -27,8 +27,12 @@ func (c *AuthController) SetupAuthRoutes(router *gin.Engine) {
 
 // Login initiates the OAuth2 flow
 func (c *AuthController) Login(ctx *gin.Context) {
-	state := "random-state" // In production, use a secure random state
-	url := c.authService.GetAuthURL(state)
+	url, err := c.authService.GetAuthURL()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate redirect url for OAuth flow"})
+		return
+	}
+
 	ctx.Redirect(http.StatusTemporaryRedirect, url)
 }
 
@@ -40,18 +44,26 @@ func (c *AuthController) Callback(ctx *gin.Context) {
 		return
 	}
 
-	userInfo, err := c.authService.HandleCallback(code)
+	state := ctx.Query("state")
+	if state == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "State parameter is required"})
+		return
+	}
+
+	userInfo, err := c.authService.HandleCallback(code, state)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Here you would typically:
-	// 1. Create or update the user in your database
-	// 2. Generate a JWT or session token
-	// 3. Set the token in a cookie or return it to the frontend
+	token, err := GenerateToken(userInfo)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate access token after login"})
+		return
+	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"user": userInfo,
+		"user":  userInfo,
+		"token": token,
 	})
 }
