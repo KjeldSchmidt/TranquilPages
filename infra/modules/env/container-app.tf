@@ -38,6 +38,11 @@ resource "azurerm_container_app" "this" {
         name        = "OAUTH_CLIENT_SECRET"
         secret_name = azurerm_key_vault_secret.user_login_oauth_client_secret.name
       }
+
+      env {
+        name        = "JWT_SECRET"
+        secret_name = azurerm_key_vault_secret.jwt_secret.name
+      }
     }
   }
 
@@ -66,6 +71,12 @@ resource "azurerm_container_app" "this" {
   secret {
     name                = azurerm_key_vault_secret.user_login_oauth_client_secret.name
     key_vault_secret_id = azurerm_key_vault_secret.user_login_oauth_client_secret.versionless_id
+    identity            = "System"
+  }
+
+  secret {
+    name                = azurerm_key_vault_secret.jwt_secret.name
+    key_vault_secret_id = azurerm_key_vault_secret.jwt_secret.versionless_id
     identity            = "System"
   }
 }

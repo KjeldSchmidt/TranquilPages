@@ -21,7 +21,7 @@ lint:
 
 tf-apply-auto:
 	@if [ -z "$(env)" ]; then echo "Error: env is not set. Please pass by name: env=<dev|staging|prod>."; exit 1; fi
-	cd "infra/env/${env}" && terraform init && terraform apply -auto-approve
+	cd "infra/" && make apply-auto "env=${env}"
 
 quality-gates: fmt lint test build
 	echo "✅✅✅"

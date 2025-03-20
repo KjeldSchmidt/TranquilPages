@@ -9,11 +9,15 @@ lint:
 	cd base && terraform init && terraform validate
 	cd env/dev && terraform init && terraform validate
 
-tf-apply-auto:
+apply-auto:
 	@if [ -z "$(env)" ]; then echo "Error: env is not set. Please pass by name: env=<dev|staging|prod>."; exit 1; fi
 	cd "env/${env}" && terraform init && terraform apply -auto-approve
 
-tf-plan:
+apply:
+	@if [ -z "$(env)" ]; then echo "Error: env is not set. Please pass by name: env=<dev|staging|prod>."; exit 1; fi
+	cd "env/${env}" && terraform init && terraform apply
+
+plan:
 	@if [ -z "$(env)" ]; then echo "Error: env is not set. Please pass by name: env=<dev|staging|prod>."; exit 1; fi
 	cd "env/${env}" && terraform init && terraform plan
 

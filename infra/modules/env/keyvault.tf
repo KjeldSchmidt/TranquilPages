@@ -32,6 +32,20 @@ resource "azurerm_key_vault_secret" "user_login_oauth_client_secret" {
   }
 }
 
+resource "azurerm_key_vault_secret" "jwt_secret" {
+  key_vault_id = azurerm_key_vault.this.id
+  name         = "jwt-secret"
+  value        = random_bytes.jwt_secret.base64
+}
+
+resource "random_bytes" "jwt_secret" {
+  length = 32
+  keepers = {
+    # Regenerate secret when environment changes
+    env = var.env_name
+  }
+}
+
 resource "azurerm_key_vault_access_policy" "pipeline_service_principal" {
   key_vault_id = azurerm_key_vault.this.id
   object_id    = data.terraform_remote_state.base.outputs["pipeline_service_principal"].object_id
