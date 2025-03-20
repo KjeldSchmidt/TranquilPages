@@ -45,15 +45,3 @@ func (r *OAuthStateRepository) FindAndDelete(state string) (*OAuthState, error) 
 	}
 	return &oauthState, err
 }
-
-func (r *OAuthStateRepository) CleanupExpired() error {
-	ctx, cancel := database.WithTimeout()
-	defer cancel()
-
-	_, err := r.db.GetCollection("oauth_states").DeleteMany(ctx, bson.M{
-		"expires_at": bson.M{
-			"$lte": primitive.NewDateTimeFromTime(time.Now()),
-		},
-	})
-	return err
-}

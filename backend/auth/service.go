@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"sync"
-	"time"
 
 	"golang.org/x/oauth2"
 )
@@ -27,40 +25,12 @@ type GoogleUserInfo struct {
 type AuthService struct {
 	config    *oauth2.Config
 	stateRepo *OAuthStateRepository
-	stopChan  chan struct{}
-	wg        sync.WaitGroup
 }
 
 func NewAuthService(config *oauth2.Config, stateRepo *OAuthStateRepository) *AuthService {
-	service := &AuthService{
+	return &AuthService{
 		config:    config,
 		stateRepo: stateRepo,
-		stopChan:  make(chan struct{}),
-	}
-	service.wg.Add(1)
-	go service.startCleanupTask()
-	return service
-}
-
-func (s *AuthService) Shutdown() {
-	close(s.stopChan)
-	s.wg.Wait()
-}
-
-func (s *AuthService) startCleanupTask() {
-	defer s.wg.Done()
-	ticker := time.NewTicker(24 * time.Hour)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-s.stopChan:
-			return
-		case <-ticker.C:
-			if err := s.stateRepo.CleanupExpired(); err != nil {
-				fmt.Printf("Failed to cleanup expired states: %v\n", err)
-			}
-		}
 	}
 }
 
@@ -95,32 +65,32 @@ func (s *AuthService) GetAuthURL() (string, error) {
 func (s *AuthService) HandleCallback(code, state string) (*GoogleUserInfo, error) {
 	oauthState, err := s.stateRepo.FindAndDelete(state)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate state: %v", err)
+		return nil, &StateValidationError{Err: err}
 	}
 	if oauthState == nil {
-		return nil, fmt.Errorf("invalid or expired state")
+		return nil, &StateValidationError{Err: fmt.Errorf("invalid or expired state")}
 	}
 
 	token, err := s.config.Exchange(context.Background(), code)
 	if err != nil {
-		return nil, fmt.Errorf("code exchange failed: %v", err)
+		return nil, &TokenExchangeError{Err: err}
 	}
 
 	client := s.config.Client(context.Background(), token)
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
-		return nil, fmt.Errorf("failed getting user info: %v", err)
+		return nil, &UserInfoError{Err: fmt.Errorf("failed getting user info: %v", err)}
 	}
 	defer resp.Body.Close()
 
 	userInfo, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed reading user info: %v", err)
+		return nil, &UserInfoError{Err: fmt.Errorf("failed reading user info: %v", err)}
 	}
 
 	var user GoogleUserInfo
 	if err := json.Unmarshal(userInfo, &user); err != nil {
-		return nil, fmt.Errorf("failed parsing user info: %v", err)
+		return nil, &UserInfoError{Err: fmt.Errorf("failed parsing user info: %v", err)}
 	}
 
 	return &user, nil

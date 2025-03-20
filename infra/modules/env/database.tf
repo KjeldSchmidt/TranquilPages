@@ -72,3 +72,18 @@ resource "azurerm_cosmosdb_mongo_collection" "books" {
     keys = ["author"]
   }
 }
+
+# Create the oauth_states collection with TTL index
+resource "azurerm_cosmosdb_mongo_collection" "oauth_states" {
+  name                = "oauth_states"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_mongo_database.this.name
+  default_ttl_seconds = 60 * 30
+
+  # Define the collection schema
+  index {
+    keys   = ["_id"]
+    unique = true
+  }
+}

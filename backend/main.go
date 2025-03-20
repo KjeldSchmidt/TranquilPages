@@ -34,7 +34,6 @@ func main() {
 	}
 	stateRepo := auth.NewOAuthStateRepository(db)
 	authService := auth.NewAuthService(auth.OAuthConfig, stateRepo)
-	defer authService.Shutdown()
 	authController := auth.NewAuthController(authService)
 
 	// Setup router
