@@ -2,8 +2,11 @@ build:
 	go mod download
 	go build -o ./build/tranquil-pages
 
+install-deps:
+	go install gotest.tools/gotestsum@latest
+
 test:
-	go test ./...
+	gotestsum --format testname ./...
 
 fmt:
 	go fmt ./...
@@ -42,4 +45,4 @@ start-local-db:
 autostart-local-db:
 	sudo docker update --restart unless-stopped mongodb
 
-.PHONY: build
+.PHONY: build install-deps
