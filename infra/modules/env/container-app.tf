@@ -52,18 +52,21 @@ resource "azurerm_container_app" "this" {
   }
 
   secret {
-    name  = azurerm_key_vault_secret.database_connection_string.name
-    value = azurerm_key_vault_secret.database_connection_string.value
+    name                = azurerm_key_vault_secret.database_connection_string.name
+    key_vault_secret_id = azurerm_key_vault_secret.database_connection_string.id
+    identity            = "System"
   }
 
   secret {
-    name  = azurerm_key_vault_secret.user_login_oauth_client_id.name
-    value = azurerm_key_vault_secret.user_login_oauth_client_id.value
+    name                = azurerm_key_vault_secret.user_login_oauth_client_id.name
+    key_vault_secret_id = azurerm_key_vault_secret.user_login_oauth_client_id.id
+    identity            = "System"
   }
 
   secret {
-    name  = azurerm_key_vault_secret.user_login_oauth_client_secret.name
-    value = azurerm_key_vault_secret.user_login_oauth_client_secret.value
+    name                = azurerm_key_vault_secret.user_login_oauth_client_secret.name
+    key_vault_secret_id = azurerm_key_vault_secret.user_login_oauth_client_secret.id
+    identity            = "System"
   }
 }
 

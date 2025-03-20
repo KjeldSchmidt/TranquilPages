@@ -31,3 +31,11 @@ resource "azurerm_key_vault_access_policy" "pipeline_service_principal" {
 
   secret_permissions = ["Get", "List", "Set", "Delete"]
 }
+
+resource "azurerm_key_vault_access_policy" "backend_container_apps" {
+  key_vault_id = azurerm_key_vault.this.id
+  object_id    = azurerm_container_app.this.identity[0].principal_id
+  tenant_id    = data.azurerm_subscription.current.tenant_id
+
+  secret_permissions = ["Get"]
+}
