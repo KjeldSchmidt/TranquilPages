@@ -59,13 +59,13 @@ resource "azurerm_container_app" "this" {
 
   secret {
     name                = azurerm_key_vault_secret.user_login_oauth_client_id.name
-    key_vault_secret_id = azurerm_key_vault_secret.user_login_oauth_client_id.id
+    key_vault_secret_id = azurerm_key_vault_secret.user_login_oauth_client_id.versionless_id
     identity            = "System"
   }
 
   secret {
     name                = azurerm_key_vault_secret.user_login_oauth_client_secret.name
-    key_vault_secret_id = azurerm_key_vault_secret.user_login_oauth_client_secret.id
+    key_vault_secret_id = azurerm_key_vault_secret.user_login_oauth_client_secret.versionless_id
     identity            = "System"
   }
 }
