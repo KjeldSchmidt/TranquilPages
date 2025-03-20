@@ -16,12 +16,20 @@ resource "azurerm_key_vault_secret" "user_login_oauth_client_id" {
   key_vault_id = azurerm_key_vault.this.id
   name         = "user-login-oauth-client-id"
   value        = "Placeholder"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 resource "azurerm_key_vault_secret" "user_login_oauth_client_secret" {
   key_vault_id = azurerm_key_vault.this.id
   name         = "user-login-oauth-client-secret"
   value        = "Placeholder"
+
+  lifecycle {
+    ignore_changes = [value]
+  }
 }
 
 resource "azurerm_key_vault_access_policy" "pipeline_service_principal" {
