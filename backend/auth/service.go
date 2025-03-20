@@ -25,12 +25,14 @@ type GoogleUserInfo struct {
 type AuthService struct {
 	config    *oauth2.Config
 	stateRepo *OAuthStateRepository
+	tokenRepo *TokenRepository
 }
 
-func NewAuthService(config *oauth2.Config, stateRepo *OAuthStateRepository) *AuthService {
+func NewAuthService(config *oauth2.Config, stateRepo *OAuthStateRepository, tokenRepo *TokenRepository) *AuthService {
 	return &AuthService{
 		config:    config,
 		stateRepo: stateRepo,
+		tokenRepo: tokenRepo,
 	}
 }
 
@@ -94,4 +96,38 @@ func (s *AuthService) HandleCallback(code, state string) (*GoogleUserInfo, error
 	}
 
 	return &user, nil
+}
+
+// Logout disables the given token, ensuring that it cannot be used for further authentication
+func (s *AuthService) Logout(token string) error {
+	_, err := ValidateToken(token)
+	if err != nil {
+		return err
+	}
+
+	// Blacklist the token until its expiration
+	if err := s.tokenRepo.Blacklist(token); err != nil {
+		return fmt.Errorf("failed to blacklist token: %v", err)
+	}
+
+	return nil
+}
+
+// ValidateAuthenticationToken checks if a token is valid and active, extracting Claims for further use if so.
+func (s *AuthService) ValidateAuthenticationToken(tokenString string) (*Claims, error) {
+	claims, err := ValidateToken(tokenString)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if token is blacklisted
+	isBlacklisted, err := s.tokenRepo.IsBlacklisted(tokenString)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check token blacklist: %v", err)
+	}
+	if isBlacklisted {
+		return nil, &TokenBlacklistError{Err: fmt.Errorf("token has been revoked")}
+	}
+
+	return claims, nil
 }

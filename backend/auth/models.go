@@ -10,3 +10,9 @@ type OAuthState struct {
 	CreatedAt primitive.DateTime `bson:"created_at"`
 	ExpiresAt primitive.DateTime `bson:"expires_at"`
 }
+
+type BlacklistedToken struct {
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	Token     string             `bson:"token"`
+	CreatedAt primitive.DateTime `bson:"created_at"`
+}

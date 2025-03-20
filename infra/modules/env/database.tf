@@ -87,3 +87,22 @@ resource "azurerm_cosmosdb_mongo_collection" "oauth_states" {
     unique = true
   }
 }
+
+resource "azurerm_cosmosdb_mongo_collection" "blacklisted_jwts" {
+  name                = "blacklisted_jwts"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  account_name        = azurerm_cosmosdb_account.this.name
+  database_name       = azurerm_cosmosdb_mongo_database.this.name
+  default_ttl_seconds = 60 * 60 * 24 * 180 # Keep the blacklist for a long time, in case our tokens ever get a much longer TTL
+
+  # Define the collection schema
+  index {
+    keys   = ["_id"]
+    unique = true
+  }
+
+  # Add index for token lookups
+  index {
+    keys = ["token"]
+  }
+}

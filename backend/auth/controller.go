@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,6 +23,7 @@ func (c *AuthController) SetupAuthRoutes(router *gin.Engine) {
 	{
 		auth.GET("/login", c.Login)
 		auth.GET("/callback", c.Callback)
+		auth.POST("/logout", c.Logout)
 	}
 }
 
@@ -66,4 +68,22 @@ func (c *AuthController) Callback(ctx *gin.Context) {
 		"user":  userInfo,
 		"token": token,
 	})
+}
+
+// Logout handles user logout by blacklisting their token
+func (c *AuthController) Logout(ctx *gin.Context) {
+	token := ctx.Request.Header.Get("Authorization")
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+		return
+	}
+
+	token = strings.TrimPrefix(token, "Bearer ")
+
+	if err := c.authService.Logout(token); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{})
 }
