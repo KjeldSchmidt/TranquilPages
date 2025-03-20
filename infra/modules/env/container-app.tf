@@ -75,8 +75,5 @@ resource "azurerm_key_vault_access_policy" "container_app" {
   tenant_id    = data.azurerm_subscription.current.tenant_id
   object_id    = azurerm_container_app.this.identity[0].principal_id
 
-  secret_permissions = [
-    "Get",
-    "List"
-  ]
+  secret_permissions = ["Get"]
 }
