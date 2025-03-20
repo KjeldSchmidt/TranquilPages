@@ -30,7 +30,7 @@ func getRedirectURL() (string, error) {
 		return "", errors.ErrEnvNotSet("CONTAINER_APP_ENV_DNS_SUFFIX")
 	}
 
-	return fmt.Sprintf("https://%s.%s/%s", containerAppName, containerAppEnvDnsSuffix, redicrect_route), nil
+	return fmt.Sprintf("https://%s.%s%s", containerAppName, containerAppEnvDnsSuffix, redicrect_route), nil
 }
 
 func InitOAuthConfig() error {
