@@ -8,7 +8,7 @@ import (
 )
 
 // AuthMiddleware checks for a valid session token
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(authService *AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get the Authorization header
 		authHeader := c.GetHeader("Authorization")
@@ -26,10 +26,15 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		token := parts[1]
-		// TODO: Validate the JWT token here
-		// For now, we'll just pass it through
-		c.Set("user_token", token)
+		claims, err := authService.ValidateAuthenticationToken(parts[1])
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			c.Abort()
+			return
+		}
+
+		// Set claims in context for downstream handlers
+		c.Set("claims", claims)
 		c.Next()
 	}
 }

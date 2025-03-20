@@ -20,6 +20,7 @@ run:
 
 lint:
 	go vet ./...
+	go mod tidy
 
 quality-gates: fmt lint test build
 	echo "✅✅✅"
