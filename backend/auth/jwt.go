@@ -25,7 +25,7 @@ func getSecretKey() ([]byte, error) {
 	// Decode base64 secret
 	decoded, err := base64.StdEncoding.DecodeString(secret)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode JWT_SECRET: %v", err)
+		return nil, fmt.Errorf("failed to decode JWT_SECRET: %w", err)
 	}
 
 	return decoded, nil
@@ -55,7 +55,7 @@ func GenerateToken(user *GoogleUserInfo) (string, error) {
 	// Sign and get the complete encoded token as a string
 	tokenString, err := token.SignedString(secret)
 	if err != nil {
-		return "", fmt.Errorf("failed to sign token: %v", err)
+		return "", fmt.Errorf("failed to sign token: %w", err)
 	}
 
 	return tokenString, nil
@@ -78,7 +78,7 @@ func ValidateToken(tokenString string) (*Claims, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse token: %v", err)
+		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}
 
 	// Check if token is valid

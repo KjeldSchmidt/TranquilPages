@@ -32,7 +32,7 @@ func (r *OAuthStateRepository) Create(state *OAuthState) error {
 
 	_, err := r.collection.InsertOne(ctx, state)
 	if err != nil {
-		return fmt.Errorf("failed to insert state: %v", err)
+		return fmt.Errorf("failed to insert state: %w", err)
 	}
 
 	return nil
@@ -55,7 +55,7 @@ func (r *OAuthStateRepository) FindAndDelete(state string) (*OAuthState, error) 
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to find and delete state: %v", err)
+		return nil, fmt.Errorf("failed to find and delete state: %w", err)
 	}
 
 	return &result, nil
@@ -82,7 +82,7 @@ func (r *TokenRepository) Blacklist(token string) error {
 
 	_, err := r.collection.InsertOne(ctx, blacklistedToken)
 	if err != nil {
-		return fmt.Errorf("failed to blacklist token: %v", err)
+		return fmt.Errorf("failed to blacklist token: %w", err)
 	}
 
 	return nil
@@ -96,7 +96,7 @@ func (r *TokenRepository) IsBlacklisted(token string) (bool, error) {
 
 	count, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
-		return false, fmt.Errorf("failed to check blacklisted token: %v", err)
+		return false, fmt.Errorf("failed to check blacklisted token: %w", err)
 	}
 
 	return count > 0, nil

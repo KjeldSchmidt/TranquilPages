@@ -51,7 +51,7 @@ func GenerateRandomState() (string, error) {
 func (s *AuthService) GetAuthURL() (string, error) {
 	state, err := GenerateRandomState()
 	if err != nil {
-		return "", &AuthURLGenerationError{Err: fmt.Errorf("state parameter is required")}
+		return "", &StateGenerationError{Err: err}
 	}
 
 	oauthState := &OAuthState{
@@ -59,7 +59,7 @@ func (s *AuthService) GetAuthURL() (string, error) {
 	}
 
 	if err := s.stateRepo.Create(oauthState); err != nil {
-		return "", &AuthURLGenerationError{Err: fmt.Errorf("failed to store state: %v", err)}
+		return "", &AuthURLGenerationError{Err: fmt.Errorf("failed to store state: %w", err)}
 	}
 
 	return s.config.AuthCodeURL(state), nil
@@ -69,7 +69,7 @@ func (s *AuthService) GetAuthURL() (string, error) {
 func (s *AuthService) HandleCallback(code, state string) (*GoogleUserInfo, error) {
 	oauthState, err := s.stateRepo.FindAndDelete(state)
 	if err != nil {
-		return nil, &StateValidationError{Err: err}
+		return nil, &StateValidationError{Err: fmt.Errorf("failed to validate state: %w", err)}
 	}
 	if oauthState == nil {
 		return nil, &StateValidationError{Err: fmt.Errorf("invalid or expired state")}
@@ -77,24 +77,24 @@ func (s *AuthService) HandleCallback(code, state string) (*GoogleUserInfo, error
 
 	token, err := s.config.Exchange(context.Background(), code)
 	if err != nil {
-		return nil, &TokenExchangeError{Err: err}
+		return nil, &TokenExchangeError{Err: fmt.Errorf("failed to exchange code for token: %w", err)}
 	}
 
 	client := s.config.Client(context.Background(), token)
 	resp, err := client.Get(s.userInfoURL)
 	if err != nil {
-		return nil, &UserInfoError{Err: fmt.Errorf("failed getting user info: %v", err)}
+		return nil, &UserInfoError{Err: fmt.Errorf("failed to get user info: %w", err)}
 	}
 	defer resp.Body.Close()
 
 	userInfo, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, &UserInfoError{Err: fmt.Errorf("failed reading user info: %v", err)}
+		return nil, &UserInfoError{Err: fmt.Errorf("failed to read user info: %w", err)}
 	}
 
 	var user GoogleUserInfo
 	if err := json.Unmarshal(userInfo, &user); err != nil {
-		return nil, &UserInfoError{Err: fmt.Errorf("failed parsing user info: %v", err)}
+		return nil, &UserInfoError{Err: fmt.Errorf("failed to parse user info: %w", err)}
 	}
 
 	return &user, nil
@@ -104,12 +104,12 @@ func (s *AuthService) HandleCallback(code, state string) (*GoogleUserInfo, error
 func (s *AuthService) Logout(token string) error {
 	_, err := ValidateToken(token)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid token: %w", err)
 	}
 
 	// Blacklist the token until its expiration
 	if err := s.tokenRepo.Blacklist(token); err != nil {
-		return fmt.Errorf("failed to blacklist token: %v", err)
+		return &TokenBlacklistError{Err: fmt.Errorf("failed to blacklist token: %w", err)}
 	}
 
 	return nil
@@ -119,13 +119,13 @@ func (s *AuthService) Logout(token string) error {
 func (s *AuthService) ValidateAuthenticationToken(tokenString string) (*Claims, error) {
 	claims, err := ValidateToken(tokenString)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 
 	// Check if token is blacklisted
 	isBlacklisted, err := s.tokenRepo.IsBlacklisted(tokenString)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check token blacklist: %v", err)
+		return nil, &TokenBlacklistError{Err: fmt.Errorf("failed to check token blacklist: %w", err)}
 	}
 	if isBlacklisted {
 		return nil, &TokenBlacklistError{Err: fmt.Errorf("token has been revoked")}
