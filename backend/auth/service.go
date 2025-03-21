@@ -23,16 +23,18 @@ type GoogleUserInfo struct {
 }
 
 type AuthService struct {
-	config    *oauth2.Config
-	stateRepo *OAuthStateRepository
-	tokenRepo *TokenRepository
+	config      *oauth2.Config
+	stateRepo   OAuthStateRepositoryInterface
+	tokenRepo   TokenRepositoryInterface
+	userInfoURL string
 }
 
-func NewAuthService(config *oauth2.Config, stateRepo *OAuthStateRepository, tokenRepo *TokenRepository) *AuthService {
+func NewAuthService(config *oauth2.Config, stateRepo OAuthStateRepositoryInterface, tokenRepo TokenRepositoryInterface) *AuthService {
 	return &AuthService{
-		config:    config,
-		stateRepo: stateRepo,
-		tokenRepo: tokenRepo,
+		config:      config,
+		stateRepo:   stateRepo,
+		tokenRepo:   tokenRepo,
+		userInfoURL: "https://www.googleapis.com/oauth2/v2/userinfo",
 	}
 }
 
@@ -79,7 +81,7 @@ func (s *AuthService) HandleCallback(code, state string) (*GoogleUserInfo, error
 	}
 
 	client := s.config.Client(context.Background(), token)
-	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	resp, err := client.Get(s.userInfoURL)
 	if err != nil {
 		return nil, &UserInfoError{Err: fmt.Errorf("failed getting user info: %v", err)}
 	}

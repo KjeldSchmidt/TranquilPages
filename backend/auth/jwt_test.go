@@ -174,7 +174,7 @@ func TestTokenTiming(t *testing.T) {
 
 	now := time.Now()
 
-	// Test tiemstamps with wiggle room for execution time
+	// Test timestamps with wiggle room for execution time
 	assert.True(t, claims.IssuedAt.Time.Before(now.Add(10*time.Second)))
 	assert.True(t, claims.IssuedAt.Time.After(now.Add(-10*time.Second)))
 
