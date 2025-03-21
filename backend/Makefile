@@ -2,7 +2,7 @@ build:
 	go mod download
 	go build -o ./build/tranquil-pages
 
-install-deps:
+install-repo-dependencies:
 	go install gotest.tools/gotestsum@latest
 
 test:

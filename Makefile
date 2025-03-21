@@ -40,5 +40,6 @@ reset-local-db:
 install-repo-dependencies:
 	git config core.hooksPath ./.githooks
 	curl -fsS https://dotenvx.sh | sudo sh
+	cd backend && make install-repo-dependencies
 
 .PHONY: build

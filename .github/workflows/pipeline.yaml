@@ -36,6 +36,9 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
 
+      - name: Install repository dependencies
+        run: make install-repo-deps
+
       - name: Formatting validation
         run: make fmt-check
 
