@@ -9,6 +9,7 @@ import (
 // MockTokenRepository implements TokenRepositoryInterface for testing
 type MockTokenRepository struct {
 	blacklistedTokens map[string]bool
+	blacklistFunc     func(token string) error
 }
 
 func NewMockTokenRepository() *MockTokenRepository {
@@ -17,7 +18,15 @@ func NewMockTokenRepository() *MockTokenRepository {
 	}
 }
 
+func (m *MockTokenRepository) Reset() {
+	m.blacklistedTokens = make(map[string]bool)
+	m.blacklistFunc = nil
+}
+
 func (m *MockTokenRepository) Blacklist(token string) error {
+	if m.blacklistFunc != nil {
+		return m.blacklistFunc(token)
+	}
 	m.blacklistedTokens[token] = true
 	return nil
 }
@@ -37,6 +46,11 @@ func NewMockOAuthStateRepository() *MockOAuthStateRepository {
 		states: make(map[string]*OAuthState),
 	}
 	return m
+}
+
+func (m *MockOAuthStateRepository) Reset() {
+	m.states = make(map[string]*OAuthState)
+	m.createFunc = nil
 }
 
 // Create stores a new OAuth state

@@ -28,7 +28,11 @@ func AuthMiddleware(authService *AuthService) gin.HandlerFunc {
 
 		claims, err := authService.ValidateAuthenticationToken(parts[1])
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			if _, ok := err.(*TokenRevokedError); ok {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Token has been revoked"})
+			} else {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			}
 			c.Abort()
 			return
 		}

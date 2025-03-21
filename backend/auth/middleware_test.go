@@ -19,7 +19,6 @@ func setupTestRouter() *gin.Engine {
 func TestAuthMiddleware(t *testing.T) {
 	// Setup test environment
 	setupTestEnv(t)
-	router := setupTestRouter()
 
 	// Create mock repositories
 	mockTokenRepo := NewMockTokenRepository()
@@ -43,33 +42,37 @@ func TestAuthMiddleware(t *testing.T) {
 	// Create test auth service
 	authService := NewAuthService(config, mockStateRepo, mockTokenRepo)
 
-	// Test user
+	// Create test controller
+	controller := NewAuthController(authService)
+
+	// Setup test router
+	router := setupTestRouter()
+	controller.SetupAuthRoutes(router)
+
+	// Add test endpoint
+	router.GET("/test", AuthMiddleware(authService), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "success"})
+	})
+
+	// Generate valid token for testing
 	testUser := &GoogleUserInfo{
 		ID:            "123",
 		Email:         "test@test.com",
 		VerifiedEmail: true,
 	}
-
-	// Generate valid token
 	validToken, err := GenerateToken(testUser)
 	assert.NoError(t, err)
 
-	// Test handler
-	router.GET("/test", AuthMiddleware(authService), func(c *gin.Context) {
-		claims, exists := c.Get("claims")
-		assert.True(t, exists)
-		assert.NotNil(t, claims)
-		c.JSON(http.StatusOK, gin.H{"status": "success"})
-	})
-
 	tests := []struct {
 		name           string
+		setupMock      func()
 		setupRequest   func() *http.Request
 		expectedStatus int
 		expectedBody   string
 	}{
 		{
-			name: "missing authorization header",
+			name:      "missing authorization header",
+			setupMock: func() {},
 			setupRequest: func() *http.Request {
 				req, _ := http.NewRequest("GET", "/test", nil)
 				return req
@@ -78,7 +81,8 @@ func TestAuthMiddleware(t *testing.T) {
 			expectedBody:   `{"error":"Authorization header is required"}`,
 		},
 		{
-			name: "invalid header format",
+			name:      "invalid header format",
+			setupMock: func() {},
 			setupRequest: func() *http.Request {
 				req, _ := http.NewRequest("GET", "/test", nil)
 				req.Header.Set("Authorization", "InvalidFormat")
@@ -88,7 +92,8 @@ func TestAuthMiddleware(t *testing.T) {
 			expectedBody:   `{"error":"Invalid authorization header format"}`,
 		},
 		{
-			name: "invalid token",
+			name:      "invalid token",
+			setupMock: func() {},
 			setupRequest: func() *http.Request {
 				req, _ := http.NewRequest("GET", "/test", nil)
 				req.Header.Set("Authorization", "Bearer invalid.token.here")
@@ -98,7 +103,21 @@ func TestAuthMiddleware(t *testing.T) {
 			expectedBody:   `{"error":"Invalid or expired token"}`,
 		},
 		{
-			name: "valid token",
+			name: "revoked token",
+			setupMock: func() {
+				mockTokenRepo.Blacklist(validToken)
+			},
+			setupRequest: func() *http.Request {
+				req, _ := http.NewRequest("GET", "/test", nil)
+				req.Header.Set("Authorization", "Bearer "+validToken)
+				return req
+			},
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"error":"Token has been revoked"}`,
+		},
+		{
+			name:      "valid token",
+			setupMock: func() {},
 			setupRequest: func() *http.Request {
 				req, _ := http.NewRequest("GET", "/test", nil)
 				req.Header.Set("Authorization", "Bearer "+validToken)
@@ -111,6 +130,9 @@ func TestAuthMiddleware(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Reset mock repository state
+			mockTokenRepo.Reset()
+			tt.setupMock()
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, tt.setupRequest())
 

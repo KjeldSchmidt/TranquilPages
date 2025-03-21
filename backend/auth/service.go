@@ -128,7 +128,7 @@ func (s *AuthService) ValidateAuthenticationToken(tokenString string) (*Claims, 
 		return nil, &TokenBlacklistError{Err: fmt.Errorf("failed to check token blacklist: %w", err)}
 	}
 	if isBlacklisted {
-		return nil, &TokenBlacklistError{Err: fmt.Errorf("token has been revoked")}
+		return nil, &TokenRevokedError{}
 	}
 
 	return claims, nil

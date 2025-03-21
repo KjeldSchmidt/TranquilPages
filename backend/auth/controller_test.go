@@ -318,6 +318,22 @@ func TestLogout(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"Failed to logout"}`,
 		},
+		{
+			name: "repository error",
+			setupMock: func() {
+				// Force repository error
+				mockTokenRepo.blacklistFunc = func(token string) error {
+					return assert.AnError
+				}
+			},
+			setupRequest: func() *http.Request {
+				req, _ := http.NewRequest("POST", "/auth/logout", nil)
+				req.Header.Set("Authorization", "Bearer "+validToken)
+				return req
+			},
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   `{"error":"Failed to logout"}`,
+		},
 	}
 
 	for _, tt := range tests {

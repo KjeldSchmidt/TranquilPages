@@ -57,3 +57,10 @@ type TokenBlacklistError struct {
 func (e *TokenBlacklistError) Error() string {
 	return fmt.Sprintf("failed to manage token blacklist: %v", e.Err)
 }
+
+// TokenRevokedError represents a token that has been revoked by the user
+type TokenRevokedError struct{}
+
+func (e *TokenRevokedError) Error() string {
+	return "token has been revoked"
+}

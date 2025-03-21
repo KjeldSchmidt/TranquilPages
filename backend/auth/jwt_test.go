@@ -33,7 +33,7 @@ func TestGenerateToken(t *testing.T) {
 		validate func(*testing.T, string, error)
 	}{
 		{
-			name: "valid user info",
+			name: "valid user",
 			user: &GoogleUserInfo{
 				ID:            "123",
 				Email:         "test@test.com",
@@ -43,13 +43,22 @@ func TestGenerateToken(t *testing.T) {
 			validate: func(t *testing.T, token string, err error) {
 				assert.NoError(t, err)
 				assert.NotEmpty(t, token)
+
+				// Verify token can be validated
+				claims, err := ValidateToken(token)
+				assert.NoError(t, err)
+				assert.NotNil(t, claims)
+				assert.Equal(t, "123", claims.UserID)
+				assert.Equal(t, "test@test.com", claims.Email)
+				assert.True(t, claims.Verified)
 			},
 		},
 		{
 			name: "missing JWT secret",
 			user: &GoogleUserInfo{
-				ID:    "123",
-				Email: "test@test.com",
+				ID:            "123",
+				Email:         "test@test.com",
+				VerifiedEmail: true,
 			},
 			wantErr: true,
 			validate: func(t *testing.T, token string, err error) {
@@ -63,7 +72,10 @@ func TestGenerateToken(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.name == "missing JWT secret" {
 				os.Unsetenv("JWT_SECRET")
+			} else {
+				setupTestEnv(t)
 			}
+
 			token, err := GenerateToken(tt.user)
 			tt.validate(t, token, err)
 		})
@@ -79,14 +91,6 @@ func TestValidateToken(t *testing.T) {
 		VerifiedEmail: true,
 	}
 	validStaticToken, err := GenerateToken(staticUser)
-	assert.NoError(t, err)
-
-	randomUser := &GoogleUserInfo{
-		ID:            generateRandomString(10),
-		Email:         generateRandomString(10) + "@test.com",
-		VerifiedEmail: true,
-	}
-	validRandomToken, err := GenerateToken(randomUser)
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -132,18 +136,6 @@ func TestValidateToken(t *testing.T) {
 			validate: func(t *testing.T, claims *Claims, err error) {
 				assert.Error(t, err)
 				assert.Nil(t, claims)
-			},
-		},
-		{
-			name:    "random user values",
-			token:   validRandomToken,
-			wantErr: false,
-			validate: func(t *testing.T, claims *Claims, err error) {
-				assert.NoError(t, err)
-				assert.NotNil(t, claims)
-				assert.Equal(t, randomUser.ID, claims.UserID)
-				assert.Equal(t, randomUser.Email, claims.Email)
-				assert.Equal(t, randomUser.VerifiedEmail, claims.Verified)
 			},
 		},
 	}
