@@ -78,6 +78,12 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 		return
 	}
 
+	// Validate token format
+	if !strings.HasPrefix(token, "Bearer ") {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
+		return
+	}
+
 	token = strings.TrimPrefix(token, "Bearer ")
 
 	if err := c.authService.Logout(token); err != nil {
