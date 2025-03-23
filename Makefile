@@ -13,7 +13,8 @@ fmt-check:
 	cd infra && make fmt-check
 
 run:
-	cd backend && make run
+	cd frontend && make run &
+	cd backend && make run &
 
 lint:
 	cd backend && make lint

@@ -168,8 +168,8 @@ func TestCallback(t *testing.T) {
 				})
 			},
 			query:          "?code=valid-code&state=valid-state",
-			expectedStatus: http.StatusOK,
-			expectedBody:   `{"user":{"id":"123","email":"test@test.com","verified_email":true,"name":"","given_name":"","family_name":"","picture":"","locale":""},"token":"*"}`,
+			expectedStatus: http.StatusTemporaryRedirect,
+			expectedBody:   "",
 		},
 		{
 			name:           "missing code",
@@ -205,20 +205,16 @@ func TestCallback(t *testing.T) {
 
 			assert.Equal(t, tt.expectedStatus, w.Code)
 			if tt.expectedBody != "" {
-				if tt.expectedBody == `{"user":{"id":"123","email":"test@test.com","verified_email":true,"name":"","given_name":"","family_name":"","picture":"","locale":""},"token":"*"}` {
-					// For success case, just verify the structure and user info
-					var response map[string]interface{}
-					err := json.Unmarshal(w.Body.Bytes(), &response)
-					assert.NoError(t, err)
-					assert.Contains(t, response, "user")
-					assert.Contains(t, response, "token")
-					user := response["user"].(map[string]interface{})
-					assert.Equal(t, "123", user["id"])
-					assert.Equal(t, "test@test.com", user["email"])
-					assert.True(t, user["verified_email"].(bool))
-				} else {
-					assert.JSONEq(t, tt.expectedBody, w.Body.String())
-				}
+				assert.JSONEq(t, tt.expectedBody, w.Body.String())
+			}
+
+			// For successful callback, verify cookie is set
+			if tt.name == "successful callback" {
+				cookies := w.Result().Cookies()
+				assert.Len(t, cookies, 1)
+				assert.Equal(t, "token", cookies[0].Name)
+				assert.True(t, cookies[0].HttpOnly)
+				assert.True(t, cookies[0].Secure)
 			}
 		})
 	}
@@ -274,13 +270,29 @@ func TestLogout(t *testing.T) {
 		expectedBody   string
 	}{
 		{
-			name: "successful logout",
+			name: "successful logout with Authorization header",
 			setupMock: func() {
 				// No setup needed for success case
 			},
 			setupRequest: func() *http.Request {
 				req, _ := http.NewRequest("POST", "/auth/logout", nil)
 				req.Header.Set("Authorization", "Bearer "+validToken)
+				return req
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody:   `{}`,
+		},
+		{
+			name:      "successful logout with cookie",
+			setupMock: func() {},
+			setupRequest: func() *http.Request {
+				req, _ := http.NewRequest("POST", "/auth/logout", nil)
+				req.AddCookie(&http.Cookie{
+					Name:     "token",
+					Value:    validToken,
+					HttpOnly: true,
+					Secure:   true,
+				})
 				return req
 			},
 			expectedStatus: http.StatusOK,
@@ -294,7 +306,7 @@ func TestLogout(t *testing.T) {
 				return req
 			},
 			expectedStatus: http.StatusUnauthorized,
-			expectedBody:   `{"error":"Authorization header is required"}`,
+			expectedBody:   `{"error":"no valid authentication token found"}`,
 		},
 		{
 			name:      "invalid token format",

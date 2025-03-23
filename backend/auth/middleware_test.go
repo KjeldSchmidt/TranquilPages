@@ -78,7 +78,7 @@ func TestAuthMiddleware(t *testing.T) {
 				return req
 			},
 			expectedStatus: http.StatusUnauthorized,
-			expectedBody:   `{"error":"Authorization header is required"}`,
+			expectedBody:   `{"error":"no valid authentication token found"}`,
 		},
 		{
 			name:      "invalid header format",
@@ -121,6 +121,22 @@ func TestAuthMiddleware(t *testing.T) {
 			setupRequest: func() *http.Request {
 				req, _ := http.NewRequest("GET", "/test", nil)
 				req.Header.Set("Authorization", "Bearer "+validToken)
+				return req
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody:   `{"status":"success"}`,
+		},
+		{
+			name:      "valid token from cookie",
+			setupMock: func() {},
+			setupRequest: func() *http.Request {
+				req, _ := http.NewRequest("GET", "/test", nil)
+				req.AddCookie(&http.Cookie{
+					Name:     "token",
+					Value:    validToken,
+					HttpOnly: true,
+					Secure:   true,
+				})
 				return req
 			},
 			expectedStatus: http.StatusOK,

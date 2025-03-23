@@ -1,8 +1,9 @@
 package auth
 
 import (
+	"log"
 	"net/http"
-	"strings"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +26,9 @@ func (c *AuthController) SetupAuthRoutes(router *gin.Engine) {
 		auth.GET("/callback", c.Callback)
 		auth.POST("/logout", c.Logout)
 	}
+
+	api := router.Group("/api")
+	api.GET("/user/me", AuthMiddleware(c.authService), c.GetCurrentUser)
 }
 
 // Login initiates the OAuth2 flow
@@ -64,32 +68,59 @@ func (c *AuthController) Callback(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"user":  userInfo,
-		"token": token,
-	})
+	// Set token in HTTP-only cookie
+	ctx.SetCookie("token", token, 3600, "/", "", true, true)
+
+	frontendURL := os.Getenv("FRONTEND_URL")
+	frontendURL, exists := os.LookupEnv("FRONTEND_URL")
+	if !exists {
+		log.Fatal("Failed to get FRONTEND_URL from environment")
+	}
+
+	ctx.Redirect(http.StatusTemporaryRedirect, frontendURL)
 }
 
 // Logout handles user logout by blacklisting their token
 func (c *AuthController) Logout(ctx *gin.Context) {
-	token := ctx.Request.Header.Get("Authorization")
-	if token == "" {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+	token, err := getTokenFromRequest(ctx)
+	if err != nil {
+		switch err.(type) {
+		case *TokenNotFoundError, *InvalidAuthHeaderError:
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		default:
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		}
 		return
 	}
-
-	// Validate token format
-	if !strings.HasPrefix(token, "Bearer ") {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
-		return
-	}
-
-	token = strings.TrimPrefix(token, "Bearer ")
 
 	if err := c.authService.Logout(token); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
 		return
 	}
 
+	// Clear the cookie
+	ctx.SetCookie("token", "", -1, "/", "", true, true)
 	ctx.JSON(http.StatusOK, gin.H{})
+}
+
+// GetCurrentUser returns the current user's information
+func (c *AuthController) GetCurrentUser(ctx *gin.Context) {
+	claims, exists := ctx.Get("claims")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	userClaims, ok := claims.(*Claims)
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid claims format"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"id":      userClaims.UserID,
+		"email":   userClaims.Email,
+		"name":    userClaims.Name,
+		"picture": userClaims.Picture,
+	})
 }

@@ -64,3 +64,17 @@ type TokenRevokedError struct{}
 func (e *TokenRevokedError) Error() string {
 	return "token has been revoked"
 }
+
+// TokenNotFoundError indicates no authentication token was found
+type TokenNotFoundError struct{}
+
+func (e *TokenNotFoundError) Error() string {
+	return "no valid authentication token found"
+}
+
+// InvalidAuthHeaderError indicates the Authorization header format is invalid
+type InvalidAuthHeaderError struct{}
+
+func (e *InvalidAuthHeaderError) Error() string {
+	return "Invalid authorization header format"
+}

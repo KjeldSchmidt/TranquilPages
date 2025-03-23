@@ -2,12 +2,14 @@ package main
 
 import (
 	"log"
+	"os"
 	"tranquil-pages/auth"
 	"tranquil-pages/controllers"
 	"tranquil-pages/database"
 	"tranquil-pages/repository"
 	"tranquil-pages/services"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,13 +35,25 @@ func setupRoutes(db *database.Database) *gin.Engine {
 	// Setup router
 	router := gin.Default()
 
+	frontendURL, exists := os.LookupEnv("FRONTEND_URL")
+	if !exists {
+		log.Fatal("Failed to get FRONTEND_URL from environment")
+	}
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{frontendURL},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
+
 	// Setup public routes
 	authController.SetupAuthRoutes(router)
 
 	// Setup user api routes
-	user_api := router.Group("/api")
-	user_api.Use(auth.AuthMiddleware(authService))
-	bookController.SetupBookRoutes(user_api)
+	userApi := router.Group("/api")
+	userApi.Use(auth.AuthMiddleware(authService))
+	bookController.SetupBookRoutes(userApi)
 
 	return router
 }

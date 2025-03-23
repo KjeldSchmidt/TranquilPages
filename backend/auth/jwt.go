@@ -13,6 +13,8 @@ type Claims struct {
 	UserID   string `json:"user_id"`
 	Email    string `json:"email"`
 	Verified bool   `json:"verified"`
+	Name     string `json:"name"`
+	Picture  string `json:"picture"`
 	jwt.RegisteredClaims
 }
 
@@ -43,6 +45,8 @@ func GenerateToken(user *GoogleUserInfo) (string, error) {
 		UserID:   user.ID,
 		Email:    user.Email,
 		Verified: user.VerifiedEmail,
+		Name:     user.Name,
+		Picture:  user.Picture,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
