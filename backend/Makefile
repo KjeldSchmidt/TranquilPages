@@ -1,3 +1,5 @@
+env ?= local
+
 build:
 	go mod download
 	go build -o ./build/tranquil-pages
@@ -6,7 +8,7 @@ install-repo-dependencies:
 	go install gotest.tools/gotestsum@latest
 
 test:
-	dotenvx run -f ../.env.local -- gotestsum --format testname ./...
+	dotenvx run -f ../.env.${env} -- gotestsum --format testname ./...
 
 fmt:
 	go fmt ./...
@@ -19,7 +21,7 @@ fmt-check:
 	fi
 
 run:
-	 dotenvx run -f ../.env.local -- go run main.go
+	dotenvx run -f "../.env.${env}" -- go run main.go
 
 lint:
 	go vet ./...
