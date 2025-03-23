@@ -45,6 +45,8 @@ jobs:
       - name: Test
         env:
           DB_URL: mongodb://root:ephemeral-test-db@localhost:27017/admin?authSource=admin
+          OAUTH_CLIENT_ID: ${{ secrets.OAUTH_DEV_CLIENT_ID }}
+          OAUTH_CLIENT_SECRET: ${{ secrets.OAUTH_DEV_CLIENT_SECRET }}
         run: make test
 
       - name: Configure Azure CLI

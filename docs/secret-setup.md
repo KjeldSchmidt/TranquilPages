@@ -18,6 +18,12 @@ Secret Name: `DOCKER_API_TOKEN`/`DOCKER_USERNAME`
 Username and API token to push the build image to dockerhub. Token must be
 created with write permissions.
 
+---
+
+Secret Name: `OAUTH_DEV_CLIENT_ID` / `OAUTH_DEV_CLIENT_SECRET`
+
+ID and Secret for the dev OAuth client.
+
 ## Keyvault Secrets
 
 These keyvault secrets need to be set manually, but placeholders for them are created via IaC.
