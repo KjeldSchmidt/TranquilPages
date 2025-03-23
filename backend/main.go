@@ -11,14 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
-	// Initialize database
-	db, err := database.GetDatabase()
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
-	}
-	defer db.Close()
-
+func setupRoutes(db *database.Database) *gin.Engine {
 	// Initialize repositories
 	bookRepo := repository.NewBookRepository(db)
 
@@ -45,7 +38,21 @@ func main() {
 
 	// Setup user api routes
 	user_api := router.Group("/api")
+	user_api.Use(auth.AuthMiddleware(authService))
 	bookController.SetupBookRoutes(user_api)
+
+	return router
+}
+
+func main() {
+	// Initialize database
+	db, err := database.GetDatabase()
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+	defer db.Close()
+
+	router := setupRoutes(db)
 
 	// Start server
 	if err := router.Run(":8080"); err != nil {
