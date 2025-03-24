@@ -1,11 +1,11 @@
 run:
-	npm run ng serve --poll=2000
+	npm run ng -- serve --poll=2000
 
 test-watch:
-	npm run ng test --poll=2000
+	npm run ng -- test --poll=2000
 
 test:
-	npm run ng test --watch=false --browsers=ChromeHeadless
+	npm run ng -- test --no-watch --no-progress --browsers=ChromeHeadless
 
 build:
 	npm run ng build
