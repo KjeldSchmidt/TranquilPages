@@ -5,7 +5,7 @@ test-watch:
 	npm run ng test --poll=2000
 
 test:
-	npm run ng test --watch=false
+	npm run ng test --watch=false --browsers=ChromeHeadless
 
 build:
 	npm run ng build
