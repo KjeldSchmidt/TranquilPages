@@ -1,14 +1,14 @@
 run:
-	ng serve --poll=2000
+	npm run ng serve --poll=2000
 
 test-watch:
-	ng test --poll=2000
+	npm run ng test --poll=2000
 
 test:
-	ng test --watch=false
+	npm run ng test --watch=false
 
 build:
-	ng build
+	npm run ng build
 
 quality-gates: test
 
