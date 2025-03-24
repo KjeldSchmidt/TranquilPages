@@ -1,8 +1,10 @@
 build:
 	cd backend && make build
+	cd fronend && make build
 
 test:
 	cd backend && make test
+	cd frontend && make test
 
 fmt:
 	cd backend && make fmt
