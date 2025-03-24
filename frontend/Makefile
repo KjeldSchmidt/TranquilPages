@@ -12,6 +12,9 @@ build:
 
 quality-gates: test
 
+install-repo-dependencies:
+	npm install
+
 install-repo-dependencies-wsl:
 	sudo apt-get update
 	sudo apt-get install -y curl unzip xvfb libxi6 libgconf-2-4

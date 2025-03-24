@@ -33,11 +33,16 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 24
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
 
       - name: Install repository dependencies
-        run: make install-repo-dependencies
+        run: make install-repo-dependencies-ci
 
       - name: Formatting validation
         run: make fmt-check
