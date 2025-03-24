@@ -279,8 +279,8 @@ func TestLogout(t *testing.T) {
 				req.Header.Set("Authorization", "Bearer "+validToken)
 				return req
 			},
-			expectedStatus: http.StatusOK,
-			expectedBody:   `{}`,
+			expectedStatus: http.StatusNoContent,
+			expectedBody:   "",
 		},
 		{
 			name:      "successful logout with cookie",
@@ -295,8 +295,8 @@ func TestLogout(t *testing.T) {
 				})
 				return req
 			},
-			expectedStatus: http.StatusOK,
-			expectedBody:   `{}`,
+			expectedStatus: http.StatusNoContent,
+			expectedBody:   "",
 		},
 		{
 			name:      "missing authorization header",
@@ -355,7 +355,11 @@ func TestLogout(t *testing.T) {
 			router.ServeHTTP(w, tt.setupRequest())
 
 			assert.Equal(t, tt.expectedStatus, w.Code)
-			assert.JSONEq(t, tt.expectedBody, w.Body.String())
+			if tt.expectedBody != "" {
+				assert.JSONEq(t, tt.expectedBody, w.Body.String())
+			} else {
+				assert.Empty(t, w.Body.String())
+			}
 		})
 	}
 }

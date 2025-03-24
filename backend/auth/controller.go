@@ -100,7 +100,7 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 
 	// Clear the cookie
 	ctx.SetCookie("token", "", -1, "/", "", true, true)
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.Status(http.StatusNoContent)
 }
 
 // GetCurrentUser returns the current user's information
