@@ -1,6 +1,6 @@
 build:
 	cd backend && make build
-	cd fronend && make build
+	cd frontend && make build
 
 test:
 	cd backend && make test
