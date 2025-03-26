@@ -22,6 +22,7 @@ plan:
 	cd "env/${env}" && terraform init && terraform plan
 
 quality-gates: fmt lint
+	make plan env=dev
 	echo "✅✅✅"
 
 .PHONY: build
