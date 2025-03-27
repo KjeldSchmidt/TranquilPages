@@ -8,6 +8,7 @@ test:
 	npm run ng -- test --no-watch --no-progress --browsers=ChromeHeadless
 
 build:
+	dotenvx run -f ../.env.local -- node scripts/generate-env.js
 	npm run ng build
 
 quality-gates: test

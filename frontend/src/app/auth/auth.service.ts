@@ -22,18 +22,18 @@ export class AuthService {
   }
 
   private checkAuth() {
-    this.http.get<User>(`${environment.baseUrl}/api/user/me`, { withCredentials: true }).subscribe({
+    this.http.get<User>(`${environment.BASE_URL}/api/user/me`, { withCredentials: true }).subscribe({
       next: (user) => this.userSubject.next(user),
       error: () => this.userSubject.next(null)
     });
   }
 
   login() {
-    window.location.href = `${environment.baseUrl}/auth/login`;
+    window.location.href = `${environment.BASE_URL}/auth/login`;
   }
 
   logout() {
-    this.http.post(`${environment.baseUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
+    this.http.post(`${environment.BASE_URL}/auth/logout`, {}, { withCredentials: true }).subscribe({
       next: () => {
         this.userSubject.next(null);
         window.location.reload();
