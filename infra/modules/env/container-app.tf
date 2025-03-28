@@ -43,6 +43,11 @@ resource "azurerm_container_app" "this" {
         name        = "JWT_SECRET"
         secret_name = azurerm_key_vault_secret.jwt_secret.name
       }
+
+      env {
+        name  = "FRONTEND_URL"
+        value = azurerm_storage_account.storage.primary_web_endpoint
+      }
     }
   }
 
