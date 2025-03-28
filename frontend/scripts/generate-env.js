@@ -3,7 +3,7 @@ const path = require('path');
 
 const env = {
   production: false,
-  BASE_URL: process.env.BASE_URL,
+  BACKEND_URL: process.env.BACKEND_URL,
 };
 
 let missing_env_variables = [];

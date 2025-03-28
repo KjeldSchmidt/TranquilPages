@@ -16,7 +16,7 @@ var (
 func getRedirectURL() (string, error) {
 	redicrect_route := "/auth/callback"
 
-	if baseurl, ok := os.LookupEnv("BASE_URL"); ok {
+	if baseurl, ok := os.LookupEnv("BACKEND_URL"); ok {
 		return baseurl + redicrect_route, nil
 	}
 

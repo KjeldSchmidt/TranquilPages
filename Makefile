@@ -1,6 +1,8 @@
+env ?= local
+
 build:
-	cd backend && make build
-	cd frontend && make build
+	cd backend && make build env=${env}
+	cd frontend && make build env=${env}
 
 test:
 	cd backend && make test
