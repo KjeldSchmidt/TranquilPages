@@ -98,5 +98,5 @@ jobs:
       - name: Build and Deploy Frontend
         working-directory: frontend
         run: |
-          make build
+          make build env=dev
           make deploy env=dev
