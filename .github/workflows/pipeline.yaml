@@ -94,3 +94,9 @@ jobs:
             --name tranquil-pages-dev-container-app \
             --resource-group tranquil-pages-dev-rg \
             --image docker.io/kjeldschmidt2/tranquil-pages:latest
+
+      - name: Build and Deploy Frontend
+        working-directory: frontend
+        run: |
+          make build
+          make deploy env=dev
