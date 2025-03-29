@@ -1,11 +1,5 @@
 env ?= local
 
-ifeq ($(CI),true)
-	ifeq ($(env),local)
-		$(error CI is true and env is local – failing make)
-	endif
-endif
-
 run:
 	npm run ng -- serve --poll=2000
 
@@ -16,6 +10,10 @@ test:
 	npm run ng -- test --no-watch --no-progress --browsers=ChromeHeadless
 
 build:
+	@if [ "$(CI)" = "true" ] && [ "$(env)" = "local" ]; \
+ 		then echo ".env.local cannot be used to build in a pipeline environment! Please pass env by name: env=<dev|staging|prod>."; \
+ 		exit 1; \
+ 	fi
 	dotenvx run -f ../.env.${env} -- node scripts/generate-env.js
 	npm run ng build
 
