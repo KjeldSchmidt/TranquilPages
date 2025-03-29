@@ -82,6 +82,9 @@ jobs:
       - name: Terraform Apply
         run: make tf-apply-auto env=dev
 
+      - name: Create .env-file with terraform outputs
+        run: make create-env-file env=dev
+
       - name: Build and Push Docker Image
         run: |
           make build-image
