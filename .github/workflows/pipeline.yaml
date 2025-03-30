@@ -110,4 +110,5 @@ jobs:
         working-directory: frontend
         run: |
           make build env=dev
+          cat ../.env.dev
           make deploy env=dev
