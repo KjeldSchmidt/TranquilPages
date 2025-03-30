@@ -80,6 +80,8 @@ jobs:
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
 
       - name: Install repository dependencies
         run: make install-repo-dependencies-ci
