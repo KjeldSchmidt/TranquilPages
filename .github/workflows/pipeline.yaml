@@ -22,38 +22,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-#      - name: Get Go version from go.mod
-#        id: get-go-version
-#        run: |
-#          go_version=$(grep -oP 'go \K[0-9\.]+' backend/go.mod)
-#          echo "GO_VERSION=$go_version" >> $GITHUB_ENV
-#
-#      - name: Set up Go
-#        uses: actions/setup-go@v2
-#        with:
-#          go-version: ${{ env.GO_VERSION }}
-#
-#      - name: Setup Node.js
-#        uses: actions/setup-node@v3
-#        with:
-#          node-version-file: 'frontend/package.json'
+      - name: Get Go version from go.mod
+        id: get-go-version
+        run: |
+          go_version=$(grep -oP 'go \K[0-9\.]+' backend/go.mod)
+          echo "GO_VERSION=$go_version" >> $GITHUB_ENV
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: 'frontend/package.json'
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_wrapper: false
-
-      - name: Configure Azure CLI
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }} # See https://github.com/Azure/login?tab=readme-ov-file#login-with-a-service-principal-secret
-
-      - name: Get terraform outputs
-        run: |
-          cd infra/env/dev
-          terraform init
-          terraform output -raw backend_url
-          exit 1
 
       - name: Install repository dependencies
         run: make install-repo-dependencies-ci
@@ -124,5 +112,4 @@ jobs:
         working-directory: frontend
         run: |
           make build env=dev
-          cat ../.env.dev
           make deploy env=dev
