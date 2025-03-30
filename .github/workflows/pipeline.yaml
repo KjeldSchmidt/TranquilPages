@@ -40,6 +40,8 @@ jobs:
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
 
       - name: Configure Azure CLI
         uses: azure/login@v2
