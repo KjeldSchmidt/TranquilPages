@@ -71,11 +71,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install repository dependencies
-        run: make install-repo-dependencies-ci
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: 'frontend/package.json'
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
+
+      - name: Install repository dependencies
+        run: make install-repo-dependencies-ci
 
       - name: Configure Azure CLI
         uses: azure/login@v2
