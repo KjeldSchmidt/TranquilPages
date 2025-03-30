@@ -41,6 +41,11 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
 
+      - name: Configure Azure CLI
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }} # See https://github.com/Azure/login?tab=readme-ov-file#login-with-a-service-principal-secret
+
       - name: Get terraform outputs
         run: |
           cd infra/env/dev
