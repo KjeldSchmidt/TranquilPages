@@ -5,3 +5,7 @@ build/
 local.db
 
 .vscode/
+
+.env.dev
+.env.prod
+.env.staging

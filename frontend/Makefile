@@ -21,17 +21,18 @@ quality-gates: test
 
 deploy:
 	@if [ "$(env)" = "local" ]; then echo "Error: env is not set. Please pass by name: env=<dev|staging|prod>."; exit 1; fi
-	frontend_storage_account=$(shell cd "../infra/env/dev" && terraform output -raw frontend_storage_account); \
-	az storage blob upload-batch \
+
+	@export $(shell cat ../.env.${env}) && az storage blob upload-batch \
 		--auth-mode key \
-		--account-name $$frontend_storage_account \
+		--account-name $$FRONTEND_STORAGE_ACCOUNT \
 		--destination '$$web' \
 		--source dist/tranquil-pages/browser \
-		--overwrite; \
-	az storage blob delete-batch \
+		--overwrite
+
+	@export $(shell cat ../.env.${env}) && az storage blob delete-batch \
 		--auth-mode key \
 		--source '$$web' \
-		--account-name $$frontend_storage_account \
+		--account-name $$FRONTEND_STORAGE_ACCOUNT \
 		--if-unmodified-since $(shell date -u --date='5 minutes ago' +%Y-%m-%dT%H:%MZ)
 
 
