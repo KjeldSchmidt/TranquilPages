@@ -42,15 +42,15 @@ create-env-file:
 	rm ".env.${env}" || true
 	touch ".env.${env}"
 	printf "FRONTEND_URL='" >> ".env.${env}"
-	(cd "infra/env/${env}" && terraform output -raw frontend_url) >> ".env.${env}"
+	(cd "infra/env/${env}" && terraform output -raw frontend_url 2>/dev/null) >> ".env.${env}"
 	echo "'" >> ".env.${env}"
 
 	printf "BACKEND_URL='" >> ".env.${env}"
-	(cd "infra/env/${env}" && terraform output -raw backend_url) >> ".env.${env}"
+	(cd "infra/env/${env}" && terraform output -raw backend_url 2>/dev/null) >> ".env.${env}"
 	echo "'" >> ".env.${env}"
 
 	printf "FRONTEND_STORAGE_ACCOUNT='" >> ".env.${env}"
-	(cd "infra/env/${env}" && terraform output -raw frontend_storage_account) >> ".env.${env}"
+	(cd "infra/env/${env}" && terraform output -raw frontend_storage_account 2>/dev/null) >> ".env.${env}"
 	echo "'" >> ".env.${env}"
 
 reset-local-db:
