@@ -41,6 +41,12 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
 
+      - name: Get terraform outputs
+        run: |
+          cd infra/env/dev
+          terraform output -raw backend_url
+          exit 1
+
       - name: Install repository dependencies
         run: make install-repo-dependencies-ci
 
