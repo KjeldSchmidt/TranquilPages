@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	appErrors "tranquil-pages/errors"
 	"tranquil-pages/models"
 	"tranquil-pages/repository"
@@ -22,14 +23,31 @@ func (s *BookService) CreateBook(book *models.Book) error {
 	return s.repo.Create(book)
 }
 
-func (s *BookService) GetAllBooks() ([]models.Book, error) {
-	return s.repo.FindAll()
+func (s *BookService) GetBooksByUserID(userID string) ([]models.Book, error) {
+	return s.repo.FindByUserID(userID)
 }
 
-func (s *BookService) GetBookById(id string) (*models.Book, error) {
-	return s.repo.FindById(id)
+func (s *BookService) GetBook(id, userID string) (*models.Book, error) {
+	book, err := s.repo.FindById(id)
+	if err != nil {
+		return nil, err
+	}
+	if book.UserID != userID {
+		return nil, appErrors.ErrNotFound
+	}
+	return book, nil
 }
 
-func (s *BookService) DeleteBook(id string) error {
+func (s *BookService) DeleteBook(id, userID string) error {
+	book, err := s.repo.FindById(id)
+	if err != nil {
+		if errors.Is(err, appErrors.ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+	if book.UserID != userID {
+		return appErrors.ErrNotFound
+	}
 	return s.repo.Delete(id)
 }

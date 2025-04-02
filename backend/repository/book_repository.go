@@ -18,6 +18,7 @@ type BookRepository interface {
 	FindAll() ([]models.Book, error)
 	FindById(id string) (*models.Book, error)
 	Delete(id string) error
+	FindByUserID(userID string) ([]models.Book, error)
 }
 
 type MongoBookRepository struct {
@@ -103,4 +104,21 @@ func (r *MongoBookRepository) Delete(id string) error {
 
 	_, err = r.db.GetCollection("books").DeleteOne(ctx, bson.M{"_id": objectID})
 	return r.handleDBError(err, "DeleteBook")
+}
+
+func (r *MongoBookRepository) FindByUserID(userID string) ([]models.Book, error) {
+	ctx, cancel := database.WithTimeout()
+	defer cancel()
+
+	cursor, err := r.db.GetCollection("books").Find(ctx, bson.M{"user_id": userID})
+	if err := r.handleDBError(err, "FindByUserID"); err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var books []models.Book
+	if err := r.handleDBError(cursor.All(ctx, &books), "FindByUserID cursor.All"); err != nil {
+		return nil, err
+	}
+	return books, nil
 }

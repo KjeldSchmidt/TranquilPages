@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"tranquil-pages/auth"
 	appErrors "tranquil-pages/errors"
 	"tranquil-pages/models"
 	"tranquil-pages/services"
@@ -38,12 +39,15 @@ func (bc *BookController) handleError(c *gin.Context, err error) {
 }
 
 func (bc *BookController) CreateBook(c *gin.Context) {
+	claims := c.MustGet("claims").(*auth.Claims)
+
 	var book models.Book
 	if err := c.ShouldBindJSON(&book); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	book.UserID = claims.UserID
 	err := bc.bookService.CreateBook(&book)
 	if err != nil {
 		bc.handleError(c, err)
@@ -54,7 +58,9 @@ func (bc *BookController) CreateBook(c *gin.Context) {
 }
 
 func (bc *BookController) ListBooks(c *gin.Context) {
-	books, err := bc.bookService.GetAllBooks()
+	claims := c.MustGet("claims").(*auth.Claims)
+
+	books, err := bc.bookService.GetBooksByUserID(claims.UserID)
 	if err != nil {
 		bc.handleError(c, err)
 		return
@@ -68,7 +74,9 @@ func (bc *BookController) ListBooks(c *gin.Context) {
 }
 
 func (bc *BookController) GetBook(c *gin.Context) {
-	book, err := bc.bookService.GetBookById(c.Param("id"))
+	claims := c.MustGet("claims").(*auth.Claims)
+
+	book, err := bc.bookService.GetBook(c.Param("id"), claims.UserID)
 	if err != nil {
 		bc.handleError(c, err)
 		return
@@ -78,7 +86,9 @@ func (bc *BookController) GetBook(c *gin.Context) {
 }
 
 func (bc *BookController) DeleteBook(c *gin.Context) {
-	err := bc.bookService.DeleteBook(c.Param("id"))
+	claims := c.MustGet("claims").(*auth.Claims)
+
+	err := bc.bookService.DeleteBook(c.Param("id"), claims.UserID)
 	if err != nil {
 		bc.handleError(c, err)
 		return

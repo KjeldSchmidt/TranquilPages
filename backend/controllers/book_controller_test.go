@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"tranquil-pages/auth"
 	"tranquil-pages/database"
 	"tranquil-pages/models"
 	"tranquil-pages/repository"
@@ -27,15 +28,30 @@ func getTestDependencies() (*gin.Engine, *database.TestDatabase) {
 		panic(err)
 	}
 
+	// Setup book controller
 	bookRepo := repository.NewBookRepository(testDB.Database)
 	bookService := services.NewBookService(bookRepo)
 	bookController := NewBookController(bookService)
-	bookController.SetupBookRoutes(router.Group("/"))
+
+	// Create api group with test middleware that sets auth claims
+	api := router.Group("/")
+	api.Use(func(c *gin.Context) {
+		claims := &auth.Claims{
+			UserID:   "test-user-id",
+			Email:    "test@test.com",
+			Verified: true,
+		}
+		c.Set("claims", claims)
+		c.Next()
+	})
+	bookController.SetupBookRoutes(api)
+
 	return router, testDB
 }
 
 func makeRandomBook() *models.Book {
 	return &models.Book{
+		UserID:  "test-user-id",
 		Author:  "Author " + test_utils.RandomString(12),
 		Title:   "Title " + test_utils.RandomString(20),
 		Comment: "Comment " + test_utils.RandomString(20),
@@ -48,6 +64,7 @@ func createBookViaApi(router *gin.Engine, book *models.Book) *models.Book {
 	bookJson, _ := json.Marshal(book)
 	req, _ := http.NewRequest("POST", "/books", bytes.NewReader(bookJson))
 	req.Header.Set("Content-Type", "application/json")
+
 	router.ServeHTTP(w, req)
 
 	var resultBook *models.Book
