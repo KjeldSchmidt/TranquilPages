@@ -13,7 +13,9 @@
 </header>
 
 <main>
-  <router-outlet></router-outlet>
+  <div class="feed-container">
+    <router-outlet></router-outlet>
+  </div>
 </main>
 
 <style>
@@ -31,5 +33,11 @@
   
   .login-btn:hover {
     opacity: 0.9;
+  }
+
+  .feed-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
   }
 </style>

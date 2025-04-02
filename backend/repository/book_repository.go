@@ -15,7 +15,6 @@ import (
 
 type BookRepository interface {
 	Create(book *models.Book) error
-	FindAll() ([]models.Book, error)
 	FindById(id string) (*models.Book, error)
 	Delete(id string) error
 	FindByUserID(userID string) ([]models.Book, error)
@@ -54,23 +53,6 @@ func (r *MongoBookRepository) Create(book *models.Book) error {
 
 	book.ID = result.InsertedID.(primitive.ObjectID)
 	return nil
-}
-
-func (r *MongoBookRepository) FindAll() ([]models.Book, error) {
-	ctx, cancel := database.WithTimeout()
-	defer cancel()
-
-	cursor, err := r.db.GetCollection("books").Find(ctx, bson.M{})
-	if err := r.handleDBError(err, "GetAllBooks"); err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	var books []models.Book
-	if err := r.handleDBError(cursor.All(ctx, &books), "GetAllBooks cursor.All"); err != nil {
-		return nil, err
-	}
-	return books, nil
 }
 
 func (r *MongoBookRepository) FindById(id string) (*models.Book, error) {
